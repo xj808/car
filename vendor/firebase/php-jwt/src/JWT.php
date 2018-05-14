@@ -67,7 +67,7 @@ class JWT
      * @uses urlsafeB64Decode
      */
     public static function decode($jwt, $key, array $allowed_algs = array())
-    {
+    { 
         $timestamp = is_null(static::$timestamp) ? time() : static::$timestamp;
 
         if (empty($key)) {

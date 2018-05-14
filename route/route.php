@@ -18,3 +18,4 @@ Route::get('hello/:name', 'index/hello');
 return [
 
 ];
+Route::rule('reg/:name','Index/index/reg');
