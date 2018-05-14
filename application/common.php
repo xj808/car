@@ -11,6 +11,11 @@
 
 // 应用公共文件
 // 单图片上传
+/**
+ * @param  图片字段
+ * @param  要保存的路径
+ * @return 图片保存后的路径
+ */
  function upload($image,$path){
     // 获取表单上传文件 例如上传了001.jpg
     $file = request()->file($image);
@@ -25,7 +30,9 @@
         return  $file->getError();
     }
 }
-// key
+/**
+ * @return 用于JWTtoken 的key值
+ */
 function createKey(){
   return $key="Jx3T4w5%djLp1t#";
 }
@@ -50,12 +57,22 @@ function comparePassword($ps,$db_ps){
     return getEncrypt($ps) == $db_ps;
 }
 //数组转换字符串
+/**
+ * @param  数组
+ * @param  选择的字段
+ * @return 字符串
+ */
 function arrayStr($data,$key){
     $arr=array_column($data,$key);
     $str=implode(',',$arr);
     return $str;
 }
-// 无限极分类
+/**
+ *  无限极分类
+ * @param  数组
+ * @param  父级id
+ * @return 树形数组
+ */
   function getChild($data,$pid){
       $arr = array();
       foreach ($data as $key =>$v) {
