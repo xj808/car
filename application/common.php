@@ -10,8 +10,9 @@
 // +----------------------------------------------------------------------
 
 // 应用公共文件
-// 单图片上传
+
 /**
+ * 单图片上传
  * @param  图片字段
  * @param  要保存的路径
  * @return 图片保存后的路径
@@ -30,6 +31,8 @@
         return  $file->getError();
     }
 }
+
+
 /**
  * @return 用于JWTtoken 的key值
  */
@@ -46,6 +49,8 @@ function createKey(){
 function getEncrypt($ps){
     return sha1(sha1('zm'.$ps));
 }
+
+
 /**
  * 密码比对
  * @param string $ps 要比较的密码
@@ -56,8 +61,10 @@ function getEncrypt($ps){
 function comparePassword($ps,$db_ps){
     return getEncrypt($ps) == $db_ps;
 }
-//数组转换字符串
+
+
 /**
+ * 数组转换字符串
  * @param  数组
  * @param  选择的字段
  * @return 字符串
@@ -67,6 +74,8 @@ function arrayStr($data,$key){
     $str=implode(',',$arr);
     return $str;
 }
+
+
 /**
  *  无限极分类
  * @param  数组
