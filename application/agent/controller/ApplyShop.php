@@ -7,21 +7,24 @@ use think\Db;
 */
 class ApplyShop extends Agent
 {	
+	function initialize()
+	{
+		parent::initialize();
+	}
+
+
 	/**
 	 * 修理厂申请物料未审核列表
 	 * @return [type] [description]
 	 */
 	public function index()
 	{
-		$data=$this->apply(0);
+		$data=$this->apply(0,$this->aid);
 		if($data){
-			$this->success('获取未审核列表成功',$data)
-			// $msg=$this->jsonMsg(1,'获取未审核列表成功',$data);
+			$this->result($data,1,'获取未审核列表成功');
 		}else{
-			$this->error('没有数据')
-			// $msg=$this->jsonMsg(0,'没有数据');
+			$this->result('',0,'没有数据');
 		}
-		return $msg;
 	}
 
 	/**
@@ -29,14 +32,13 @@ class ApplyShop extends Agent
 	 * @return [type] [description]
 	 */
 	public function audit()
-	{
-		$data=$this->apply(1);
+	{	
+		$data=$this->apply(1,$this->aid);
 		if($data){
-			$msg=$this->jsonMsg(1,'获取发货列表成功',$data);
+			$this->result($data,1,'获取已审核列表成功');
 		}else{
-			$msg=$this->jsonMsg(0,'没有数据');
+			$this->result('',0,'没有数据');
 		}
-		return $msg;
 	}
 
 	/**
@@ -45,13 +47,12 @@ class ApplyShop extends Agent
 	 */
 	public function close()
 	{
-		$data=$this->apply(2);
+		$data=$this->apply(2,$this->aid);
 		if($data){
-			$msg=$this->jsonMsg(1,'获取发货列表成功',$data);
+			$this->result($data,1,'获取关闭物料申请列表成功');
 		}else{
-			$msg=$this->jsonMsg(0,'没有数据');
+			$this->error('没有数据');
 		}
-		return $msg;
 	}
 
 
@@ -59,11 +60,8 @@ class ApplyShop extends Agent
 	 * 修车厂物料申请列表
 	 * @return [json] 修车厂物料列表 
 	 */
-	public function apply($status)
+	public function apply($status,$aid)
 	{
-		$token = input('post.token');
-		$aid=$this->checkToken($token);
-		// $where=[['sa.aid','=',$aid],['']]
 		return Db::table('cs_apply sa')
 			->join('cs_shop ss','sa.sid=ss.id')
 			->where(['sa.aid'=>$aid,'sa.audit_status'=>$status])
@@ -77,15 +75,13 @@ class ApplyShop extends Agent
 	 */
 	public function adopt()
 	{
-		$aid = input('get.aid');
 		//修车厂申请 状态改为已审核
-		$res = $this->status('cs_apply',$aid,1);
+		$res = $this->status('cs_apply',$this->aid,1);
 		if($res == true){
-			$msg=$this->jsonMsg('1','操作成功');
+			$this->success('操作成功');
 		}else{
-			$msg=$this->jsonMsg('0','操作失败');
+			$this->error('操作失败');
 		}
-		return $msg;
 	}
 
 	/**

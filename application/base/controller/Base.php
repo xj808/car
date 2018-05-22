@@ -8,14 +8,7 @@ use think\Db;
 */
 class Base extends Controller{
     
-    /**
-     * 初始化
-     * @return [type] [description]
-     */
-    function initialize()
-    {   
-        $this->ifToken();
-    }
+    
 
     /**
      * 验证token
@@ -31,27 +24,16 @@ class Base extends Controller{
             if (count(explode('.', $token)) != 3) {
                 $this->error('token无效');
             }
-            $aid = $this->checkToken($token);
-            if($aid){
-                $this->success('获取token成功');
-            }else{
+            $id = $this->checkToken($token);
+            if(!$id){
                 $this->error('token失效或未登录');
+            }else{
+                return $id;
             }
         }
     }
 
-	/**
-     * @param   用户id
-     * @param  用户登录账户
-     * @return JWT签名
-     */
-	public function token($uid,$login){
-        $key=create_key();   //
-        $token=['id'=>$uid,'login'=>$login];
-        $JWT=JWT::encode($token,$key);
-        JWT::$leeway = 60;
-        return $JWT;
-    }
+
 
 
     /**
@@ -91,16 +73,19 @@ class Base extends Controller{
      */
     public function county(){
         $city=input('post.id');
-        return $this->commonCounty($city);
-    }
-
-    /**
-     *@return  未被选中的城市 
-     */
-    private function commonCounty($city_id)
-    {
         return Db::table('co_china_data')->where('pid',$city_id)->select();
     }
+
+
+    /**
+     * 生成验证码
+     * @return json 验证码
+     */
+    public function verify(){
+        $this->result(rand(1111,9999),1,'验证码获取成功');
+    }
+
+    
 
 }
 

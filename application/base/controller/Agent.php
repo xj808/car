@@ -7,6 +7,18 @@ use think\Db;
 */
 class Agent extends Base
 {	
+
+	/**
+     * 初始化
+     * @return [type] [description]
+     */
+    function initialize()
+    {   
+        $this->aid=$this->ifToken();
+    }
+
+
+
 	/**
 	 * 上传支付凭证,总金额
 	 * @return 布尔
@@ -69,6 +81,7 @@ class Agent extends Base
 		return Db::table('co_bang_cate')->where($where)->field('id,def_num')->select();
 	}
 
+
 	/**
 	 *减少运营商可开通数量，增加已开通修车厂数量
 	 * @param  [type] $aid 运营商id
@@ -83,6 +96,29 @@ class Agent extends Base
 			->update();
 		
 	}
+
+
+	/**
+     *@return  未被选中的城市 
+     */
+    public function commonCounty($city_id)
+    {
+        return Db::table('co_china_data')->where('pid',$city_id)->select();
+    }
+
+
+   	/**
+     * @param   用户id
+     * @param  用户登录账户
+     * @return JWT签名
+     */
+	public function token($uid,$login){
+        $key=create_key();   //
+        $token=['id'=>$uid,'login'=>$login];
+        $JWT=JWT::encode($token,$key);
+        JWT::$leeway = 60;
+        return $JWT;
+    }
 
 
 

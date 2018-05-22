@@ -39,13 +39,7 @@ class Login extends Agent
      * @return json 验证码
      */
     public function verify(){
-        $verify=rand(1111,9999);
-        if($verify){
-            $data=['status'=>1,'msg'=>'验证码获取成功','verify'=>$verify];
-        }else{
-            $data=['status'=>2,'msg'=>'验证码获取失败'];
-        }
-        return $data;
+        $this->result(rand(1111,9999),1,'验证码获取成功');
     }
 
     /**
