@@ -82,17 +82,17 @@ class Base extends Controller{
      * @return json 验证码
      */
     public function verify(){
-        $this->result(rand(1111,9999),1,'验证码获取成功');
+        $this->result($this->apiVerify(),1,'验证码获取成功');
+    }
+
+    /**
+     * 生成API验证码
+     */
+    public function apiVerify()
+    {
+        return mt_rand(1000,9999);
     }
 
     
 
 }
-
-
-
-
-
-
-
- ?>
