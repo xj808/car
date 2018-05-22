@@ -36,11 +36,7 @@ class Base extends Controller{
         $sign=json_decode($sign,true);
         return $sign['id'];
     }
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> origin/dev
     /**
      * 获取省级名称
      * @return 省级地区名称
