@@ -1,12 +1,13 @@
 <?php 
 namespace app\agent\controller;
-use app\base\controller\Agent;
+use think\Controller;
 use think\Db;
+use Firebase\JWT\JWT;
 
 /**
 * 登录
 */
-class Login extends Agent
+class Login extends Controller
 {
 	/**
      * 登录
@@ -34,13 +35,7 @@ class Login extends Agent
         return $msg;
     }
     
-    /**
-     * 生成验证码
-     * @return json 验证码
-     */
-    public function verify(){
-        $this->result(rand(1111,9999),1,'验证码获取成功');
-    }
+    
 
     /**
      * 忘记密码
@@ -64,6 +59,20 @@ class Login extends Agent
             $msg=['status'=>0,'msg'=>$validate->getError()];
         }
         return $msg;
+    }
+
+
+        /**
+     * @param   用户id
+     * @param  用户登录账户
+     * @return JWT签名
+     */
+    private function token($uid,$login){
+        $key=create_key();   //
+        $token=['id'=>$uid,'login'=>$login];
+        $JWT=JWT::encode($token,$key);
+        JWT::$leeway = 60;
+        return $JWT;
     }
 
 }

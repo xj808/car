@@ -92,16 +92,6 @@ class Center extends Agent{
     }
 	
 	
-
-	/**
-	 * 上传图片的方法
-	 * @return [type] [description]
-	 */
-	public function voucher()
-	{			
-		return upload('image','agent');
-	}
-	
 	/**
 	 * 上传营业执照
 	 * @return 成功或失败

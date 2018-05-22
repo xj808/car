@@ -21,9 +21,7 @@ class Index extends Agent
 	 * @return [type] [description]
 	 */
 	public function msg(){
-		// $token=input('post.token');
-		// $aid=$this->checkToken($token);
-        $this->coMsg->getUrMsg(3,$this->msg,$aid);
+        $this->coMsg->getUrMsg(3,$this->msg,$this->aid);
 	}
 
 	/**
@@ -32,15 +30,12 @@ class Index extends Agent
 	 */
 	public function msgDatil()
 	{	$mid=input('post.mid');
-		$token=input('post.token');
-		$aid=$this->checkToken($token);
-		$datil=$this->coMsg->msgDetail($this->msg,$mid,$aid,3);
+		$datil=$this->coMsg->msgDetail($this->msg,$mid,$this->aid,3);
 		if($datil){
-			$msg=$this->jsonMsg(1,'获取消息详情成功',$datil);
+			$this->result($datil,1,'获取消息详情成功');
 		}else{
-			$msg=$this->jsonMsg(0,'获取消息详情失败');
+			$this->result($datil,0,'获取消息详情失败');
 		}
-		return $msg;
 	}
 
 	/**
@@ -48,16 +43,14 @@ class Index extends Agent
 	 * @return json  消息列表数据
 	 */
 	public function msgList(){
-		$token=input('post.token');
-		$aid=$this->checkToken($token);
-		$list=$this->coMsg->msgList($this->msg,$aid);
+		$list=$this->coMsg->msgList($this->msg,$this->aid);
 		if($list){
-			$msg=$this->jsonMsg(1,'获取消息列表成功',$list);
+			$this->result($list,1,'获取消息列表成功');
 		}else{
-			$msg=$this->jsonMsg(0,'获取消息列表失败');
+			$this->result($datil,0,'获取消息列表失败');
 		}
-		return $msg;	
 	}
+
 
 	/**
 	 * 获取未读消息列表
@@ -65,15 +58,12 @@ class Index extends Agent
 	 */
 	public function unread()
 	{	
-		$token=input('post.token');
-		$aid=$this->checkToken($token);
-		$list=$this->coMsg->msgLists($this->msg,$aid,0);
-		if($list){
-			$msg=$this->jsonMsg(1,'获取未读列表成功',$list);
+		$list=$this->coMsg->msgLists($this->msg,$this->aid,0);
+		if(!$list){
+			$this->result($list,1,'获取未读消息列表成功');
 		}else{
-			$msg=$this->jsonMsg(0,'获取未读列表失败');
+			$this->result($list,1,'获取未读消息列表成功');
 		}
-		return $msg;
 	}
 
 
@@ -83,15 +73,12 @@ class Index extends Agent
 	 */
 	public function read()
 	{
-		$token=input('post.token');
-		$aid=$this->checkToken($token);
-		$list=$this->coMsg->msgLists($this->msg,$aid,1);
+		$list=$this->coMsg->msgLists($this->msg,$this->aid,1);
 		if($list){
-			$msg=$this->jsonMsg(1,'获取未读列表成功',$list);
+			$this->result($list,1,'获取已读消息列表成功');
 		}else{
-			$msg=$this->jsonMsg(0,'获取未读列表失败');
+			$this->result($list,1,'获取已读消息列表成功');
 		}
-		return $msg;
 	}
 
 	/**
@@ -99,9 +86,7 @@ class Index extends Agent
 	 * @return [type] [description]
 	 */
 	public function shopNum(){
-		$token=input('post.token');
-		$aid=$this->checkToken($token);
-		return Db::table('ca_agent_set')->where('aid',$aid)->value('open_shop');
+		return Db::table('ca_agent_set')->where('aid',$this->aid)->value('open_shop');
 	}
 	
 }

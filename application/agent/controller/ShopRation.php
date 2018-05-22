@@ -13,9 +13,7 @@ class ShopRation extends Agent
 	 */
 	public function index()
 	{	
-		$token=input('post.token');
-		$aid=$this->checkToken($token);
-		$where=[['aid','=',$aid],['audit_status','=',2]];
+		$where=[['aid','=',$this->aid],['audit_status','=',2]];
 		return Db::table('cs_shop')->where($where)->select();
 	}
 
@@ -25,25 +23,23 @@ class ShopRation extends Agent
 	 */
 	public function incRation()
 	{	
-		$aid=input('get.aid');
-		$sid=input('get.sid');
+		$sid=input('post.sid');
 		Db::startTrans();
 		// 运营商可开通修车厂名额减少一个，已开通修车厂名额增加一个
-		$this->open($aid);
+		$this->open($this->aid);
 		// 运营商开通修车厂库存减少一组
-		$this->credit($aid);
+		$this->credit($this->aid);
 		// 记录修理厂提高配给
-		$this->recordRation($sid,$aid);
+		$this->recordRation($sid,$this->aid);
 		// 增加修车厂配给和库存量
 		$res=$this->addRation($sid);
 		if($res==true){
 			Db::commit();
-			$msg=$this->jsonMsg(1,'操作成功');
+			$this->result('',1,'操作成功');
 		}else{
 			Db::rollback();
-			$msg=$this->jsonMsg(0,'操作失败');
+			$this->result('',0,'操作失败');
 		}
-		return $msg;
 
 	}
 

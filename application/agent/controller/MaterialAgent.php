@@ -14,12 +14,10 @@ class MaterialAgent extends Agent
 	 */
 	public function index()
 	{
-		$token = input('post.token');
-		$aid = $this->checkToken($token);
 		return Db::table('ca_ration ar')
 				->join('co_bang_cate bc','ar.materiel=bc.id')
 				->field('name,materiel_stock')
-				->where('aid',$aid)
+				->where('aid',$this->aid)
 				->select();
 	}
 
@@ -29,15 +27,12 @@ class MaterialAgent extends Agent
 	 */
 	public function incRation()
 	{
-		$data = input('post.');
-		$aid = $this->checkToken($data['token']);
-		$res=$this->upLicense($data['voucher'],$data['price'],$aid);
+		$res=$this->upLicense($data['voucher'],$data['price'],$this->aid);
 		if($res){
-			$msg=$this->jsonMsg(1,'提高配给申请成功');
+			$this->result('',1,'提高配给申请成功');
 		}else{
-			$msg=$this->jsonMsg(0,'提高配给申请失败');
+			$this->result('',1,'提高配给申请失败');
 		}
-		return $msg;
 	}
 
 	/**
@@ -46,16 +41,13 @@ class MaterialAgent extends Agent
 	 */
 	public function applyIndex()
 	{
-		$token = input('post.token');
-		$aid = $this->checkToken($token);
-		$data=$this->warning($aid);
+		$data=$this->warning($this->aid);
 		$ar=$this->ifApply($data);
 		if(!empty($ar)){
-			$msg=$this->jsonMsg(1,'获取列表成功',$ar);
+			$this->result($ar,1,'获取列表成功');
 		}else{
-			$msg=$this->jsonMsg(0,'没有数据');
+			$this->result('',0,'没有数据');
 		}
-		return $msg;
 	}
 
 	/**
@@ -66,19 +58,14 @@ class MaterialAgent extends Agent
 	{	
 		// 获取物料种类id，获取要申请的总升数，和备注的30/40 油各多少升
 		$data=input('post.');
-		$aid = $this->checkToken($data['token']);
+
 		$ar=$this->detail($data);
-		if($ar['detail']){
 			$res=Db::table('ca_apply')->json(['detail'])->insert($ar);
 			if($res){
-				$msg=$this->jsonMsg(1,'申请成功');
+				$this->success('',1,'申请成功');
 			}else{
-				$msg=$this->jsonMsg(0,'申请失败');
+				$this->success('',1,'申请失败');
 			}
-		}else{
-			$msg=$this->jsonMsg(0,'请填写备注');
-		}
-		return $msg;
 	}
 
 
@@ -124,12 +111,12 @@ class MaterialAgent extends Agent
 	 */
 	private function detail($data)
 	{
-		foreach ($data['materiel'] as $k => $v) {
-			$arr[]=['materiel'=>$v,'num'=>$data['num'][$k],'bei'=>$data['bei'][$k]];
+		foreach ($data['materiel_id'] as $k => $v) {
+			$arr[]=['materiel'=>$v,'num'=>$data['num'][$k],'remarks'=>$data['remarks'][$k]];
 		};
 		$ar=[
 			'apply_sn'=>rand(1111,9999).'apply'.time(),
-			'aid'=>$aid,
+			'aid'=>$this->aid,
 			'detail'=>$arr,
 		];
 		return $ar;

@@ -35,7 +35,7 @@ class ApplyShop extends Agent
 	{	
 		$data=$this->apply(1,$this->aid);
 		if($data){
-			$this->result($data,1,'获取已审核列表成功');
+			$this->result($data,1,'获取已发货列表成功');
 		}else{
 			$this->result('',0,'没有数据');
 		}
@@ -51,7 +51,7 @@ class ApplyShop extends Agent
 		if($data){
 			$this->result($data,1,'获取关闭物料申请列表成功');
 		}else{
-			$this->error('没有数据');
+			$this->result($data,0,'没有数据');
 		}
 	}
 
@@ -65,7 +65,7 @@ class ApplyShop extends Agent
 		return Db::table('cs_apply sa')
 			->join('cs_shop ss','sa.sid=ss.id')
 			->where(['sa.aid'=>$aid,'sa.audit_status'=>$status])
-			->field('compay,leader,phone,sa.create_time,detail,sa.audit_status')
+			->field('sa.id,compay,leader,phone,sa.create_time,detail,sa.audit_status')
 			->select();
 	}
 
@@ -74,13 +74,15 @@ class ApplyShop extends Agent
 	 * @return [type] 操作失败或成功
 	 */
 	public function adopt()
-	{
+	{	
+		// 获取该订单id
+		$id=input('post.id');
 		//修车厂申请 状态改为已审核
-		$res = $this->status('cs_apply',$this->aid,1);
+		$res = $this->status('cs_apply',$id,1);
 		if($res == true){
-			$this->success('操作成功');
+			$this->result('',1,'您已确认,请尽快发货');
 		}else{
-			$this->error('操作失败');
+			$this->result('',0,'操作失败');
 		}
 	}
 
@@ -90,9 +92,14 @@ class ApplyShop extends Agent
 	 */
 	public function delayed()
 	{
-		$sid=input('get.sid');
+		$id=input('post.id');
 		// 点击延时over_time延迟三天
-		Db::table('cs_apply')->where('sid',$sid)->inc('over_time',259200);
+		$res=Db::table('cs_apply')->where(['id'=>$id,'aid'=>$this->aid])->inc('over_time',259200);
+		if($res){
+			$this->result('',1,'延时成功');
+		}else{
+			$this->result('',0,'延时失败');
+		}
 	}
 
 
