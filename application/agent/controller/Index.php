@@ -9,8 +9,10 @@ use think\Db;
 class Index extends Agent
 {	
 	function initialize(){
+		parent::initialize();
 		$this->msg='ca_msg';
 		$this->coMsg=new Msg();
+
 	}
 
 
@@ -19,8 +21,8 @@ class Index extends Agent
 	 * @return [type] [description]
 	 */
 	public function msg(){
-		$token=input('post.token');
-		$aid=$this->checkToken($token);
+		// $token=input('post.token');
+		// $aid=$this->checkToken($token);
         $this->coMsg->getUrMsg(3,$this->msg,$aid);
 	}
 

@@ -15,9 +15,11 @@ class ApplyShop extends Agent
 	{
 		$data=$this->apply(0);
 		if($data){
-			$msg=$this->jsonMsg(1,'获取未审核列表成功',$data);
+			$this->success('获取未审核列表成功',$data)
+			// $msg=$this->jsonMsg(1,'获取未审核列表成功',$data);
 		}else{
-			$msg=$this->jsonMsg(0,'没有数据');
+			$this->error('没有数据')
+			// $msg=$this->jsonMsg(0,'没有数据');
 		}
 		return $msg;
 	}

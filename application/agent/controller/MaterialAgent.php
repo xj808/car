@@ -7,10 +7,6 @@ use think\Db;
 */
 class MaterialAgent extends Agent
 {
-	function initialize()
-	{
-		
-	}
 
 	/**
 	 * 运营商总库存列表

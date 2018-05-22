@@ -6,7 +6,7 @@ use think\Validate;
 class Account extends Validate
 {
     protected $rule = [
-      'account'  	=> 'require',
+      'account|'  	=> 'require',
       'bank_name'	=>	'require',
       'branch' =>  'require',
       'phone'  =>'require', 
