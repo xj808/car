@@ -2,6 +2,7 @@
 namespace app\base\controller;
 use think\Controller;
 use Firebase\JWT\JWT;
+use think\Db;
 /**
 * token登录  验证
 */
@@ -12,7 +13,7 @@ class Base extends Controller{
      * @return JWT签名
      */
 	public function token($uid,$login){
-        $key=createKey();   //
+        $key=create_key();   //
         $token=['id'=>$uid,'login'=>$login];
         $JWT=JWT::encode($token,$key);
         JWT::$leeway = 60;
@@ -26,12 +27,16 @@ class Base extends Controller{
      * @return 包含用户名、id的数组
      */
     public function checkToken($token){
-        $key=createKey();
+        $key=create_key();
+        if(empty($token)){
+            return  false;
+        }
         $sign=JWT::decode($token,$key,array('HS256'));
         $sign=json_encode($sign);
         $sign=json_decode($sign,true);
-        return $sign;
+        return $sign['id'];
     }
+
     /**
      * 获取省级名称
      * @return 省级地区名称
@@ -48,7 +53,7 @@ class Base extends Controller{
     public function city(){
         // 获取省级id
         $province_id=input('post.id');
-        return Db::table('co_china_data')->where('pid',$province)->select();
+        return Db::table('co_china_data')->where('pid',$province_id)->select();
     }
 
     /**
@@ -65,6 +70,17 @@ class Base extends Controller{
     public function commonCounty($city_id)
     {
         return Db::table('co_china_data')->where('pid',$city_id)->select();
+    }
+
+    /**
+     * json 返回数据时的消息方法
+     * @param  [type] $status 状态
+     * @param  [type] $msg    提示消息
+     * @param  string $data   其他要传的值
+     * @return [type]         [description]
+     */
+    public function jsonMsg($status,$msg,$data=''){
+        return ['status'=>$status,'msg'=>$msg,'data'=>$data];
     }
 }
 

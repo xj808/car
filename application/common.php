@@ -24,16 +24,17 @@
     if($info){
         // 成功上传后 获取上传信息
         // 输出 20160820/42a79759f284b767dfcb2a0197904287.jpg
-        return  './uploads/'.$path.$info->getSaveName();
+        return  './uploads/'.$path.'/'.$info->getSaveName();
     }else{
         // 上传失败获取错误信息
         return  $file->getError();
     }
 }
+
 /**
  * @return 用于JWTtoken 的key值
  */
-function createKey(){
+function create_key(){
   return $key="Jx3T4w5%djLp1t#";
 }
 
@@ -43,7 +44,7 @@ function createKey(){
  * @return string 加密后的字符串
  * @author zhaizhaohui
  */
-function getEncrypt($ps){
+function get_encrypt($ps){
     return sha1(sha1('zm'.$ps));
 }
 /**
@@ -53,31 +54,33 @@ function getEncrypt($ps){
  * @return boolean 密码相同，返回true
  * @author zhaizhaohui
  */
-function comparePassword($ps,$db_ps){
-    return getEncrypt($ps) == $db_ps;
+function compare_password($ps,$db_ps){
+    return get_encrypt($ps) == $db_ps;
 }
-//数组转换字符串
+
 /**
+ * 数组转换字符串
  * @param  数组
  * @param  选择的字段
  * @return 字符串
  */
-function arrayStr($data,$key){
+function array_str($data,$key){
     $arr=array_column($data,$key);
     $str=implode(',',$arr);
     return $str;
 }
+
 /**
  *  无限极分类
  * @param  数组
  * @param  父级id
  * @return 树形数组
  */
-  function getChild($data,$pid){
+  function get_child($data,$pid=0){
       $arr = array();
       foreach ($data as $key =>$v) {
           if ($v['pid']==$pid) {
-              $son = getchild($data,$v['id']);
+              $son = get_child($data,$v['id']);
               if ($son){
                   $v["son"] = $son;
               }
