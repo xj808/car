@@ -45,7 +45,7 @@ class Base extends Controller{
      * @param  用户登录账户
      * @return JWT签名
      */
-	private function token($uid,$login){
+	public function token($uid,$login){
         $key=create_key();   //
         $token=['id'=>$uid,'login'=>$login];
         $JWT=JWT::encode($token,$key);
