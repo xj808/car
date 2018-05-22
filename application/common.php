@@ -10,8 +10,9 @@
 // +----------------------------------------------------------------------
 
 // 应用公共文件
-// 单图片上传
+
 /**
+ * 单图片上传
  * @param  图片字段
  * @param  要保存的路径
  * @return 图片保存后的路径
@@ -31,6 +32,7 @@
     }
 }
 
+
 /**
  * @return 用于JWTtoken 的key值
  */
@@ -47,6 +49,8 @@ function create_key(){
 function get_encrypt($ps){
     return sha1(sha1('zm'.$ps));
 }
+
+
 /**
  * 密码比对
  * @param string $ps 要比较的密码
