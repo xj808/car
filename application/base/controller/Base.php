@@ -3,12 +3,17 @@ namespace app\base\controller;
 use think\Controller;
 use Firebase\JWT\JWT;
 use think\Db;
+use msg\Sms;
 /**
 * token登录  验证
 */
 class Base extends Controller{
     
-    
+    function initialize()
+    {
+        $this->sms=new Sms();
+    }
+
 
     /**
      * 验证token
@@ -73,7 +78,7 @@ class Base extends Controller{
      */
     public function county(){
         $city=input('post.id');
-        return Db::table('co_china_data')->where('pid',$city_id)->select();
+        return Db::table('co_china_data')->where('pid',$city)->select();
     }
 
 
@@ -91,6 +96,27 @@ class Base extends Controller{
     public function apiVerify()
     {
         return mt_rand(1000,9999);
+    }
+
+
+    /**
+     * 注册银行列表
+     * @return [type] [description]
+     */
+    public function bankCode(){
+        return Db::table('co_bank_code')->select();
+    }
+
+
+    /**
+     * 手机发送验证码
+     * @param  [type] $phone   [手机号]
+     * @param  [type] $content [短信发送内容]
+     * @return [type]          [发送成功或失败]
+     */
+    public function smsVerify($phone,$content,$code)
+    {
+        return $this->sms->send_code($phone,$content,$code);
     }
 
     

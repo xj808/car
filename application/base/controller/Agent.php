@@ -17,7 +17,14 @@ class Agent extends Base
         $this->aid=$this->ifToken();
     }
 
-
+    /**
+     * 上传图片的方法
+     * @return [type] [description]
+     */
+    public function images()
+    {           
+        return upload('image','agent');
+    }
 
 	/**
 	 * 上传支付凭证,总金额
@@ -47,9 +54,9 @@ class Agent extends Base
 	 * @param  [type] $status  要修改的状态值
 	 * @return [type]         [description]
 	 */
-	public function status($table,$sid,$status)
+	public function status($table,$id,$status)
 	{
-		$res=Db::table($table)->where('id',$sid)->setField('audit_status',$status);
+		$res=Db::table($table)->where('id',$id)->setField('audit_status',$status);
 		if($res!==false){
 			return true;
 		}
@@ -107,18 +114,7 @@ class Agent extends Base
     }
 
 
-   	/**
-     * @param   用户id
-     * @param  用户登录账户
-     * @return JWT签名
-     */
-	public function token($uid,$login){
-        $key=create_key();   //
-        $token=['id'=>$uid,'login'=>$login];
-        $JWT=JWT::encode($token,$key);
-        JWT::$leeway = 60;
-        return $JWT;
-    }
+   
 
 
 
