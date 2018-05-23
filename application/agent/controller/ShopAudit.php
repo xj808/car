@@ -15,7 +15,7 @@ class ShopAudit extends Agent
 	 */
 	public function shopList()
 	{
-		return $this->alist(2);
+		return $this->sList(2);
 	}
 
 
@@ -25,21 +25,35 @@ class ShopAudit extends Agent
 	 */
 	public function index()
 	{
-		return $this->alist(1);
+		return $this->sList(1);
 	}
-
 
 	/**
 	 * 列表
 	 * @return [type] [description]
 	 */
-	public function alist($status)
+	public function sList($status)
 	{
 		$where=[['aid','=',$this->aid],['audit_status','=',$status]];
-		return Db::table('cs_shop s')
-				->join('cs_shop_set ss','ss.sid=s.id')
-				->field('compay,leader,phone,create_time,usname,major,province,city,county,service_num,license,photo,aid,sid')
+		return Db::table('cs_shop')
 				->where($where)
+				->field('id,compay,leader,phone,create_time,service_num')
+				->select();
+	}
+
+
+
+	/**
+	 * 修车厂详情
+	 * @return [type] [description]
+	 */
+	public function detail()
+	{
+		$sid=input('post.id');
+		return Db::table('cs_shop s')
+				->join('cs_shop_set ss','s.id=ss.sid')
+				->field('usname,compay,major,leader,province,city,county,address,phone,service_num,license,photo,aid,sid')
+				->where('s.id',$sid)
 				->select();
 	}
 
@@ -58,6 +72,7 @@ class ShopAudit extends Agent
 		$this->open($this->aid);
 		// 修车厂配给库存增加
 		$this->shopRation($sid);
+		// 更改修理厂审核状态
 		if($this->status('cs_shop',$sid,2)==true){
 			Db::commit();
 			$this->result('',1,'操作成功');
@@ -67,6 +82,7 @@ class ShopAudit extends Agent
 		}
 	}
 
+
 	/**
 	 * 修车厂审核驳回操作
 	 * @return [type] [description]
@@ -74,7 +90,8 @@ class ShopAudit extends Agent
 	public function reject()
 	{
 		$sid=input('post.sid');
-		if($sid){
+		$reason=input('post.reason');
+		if($reason){
 			$res=$this->status('cs_shop',$sid,3);
 			if($res==true){
 				$this->result('',1,'驳回成功');
@@ -82,7 +99,7 @@ class ShopAudit extends Agent
 				$this->result('',0,'驳回失败');
 			}
 		}else{
-			$this->result('',0,'维修厂id不能为空');
+			$this->result('',0,'驳回理由不能为空');
 		}
 	}
 

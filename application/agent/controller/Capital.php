@@ -23,10 +23,26 @@ class Capital extends Agent
 					->join('cs_shop cs','ci.sid=cs.id')
 					->join('co_car_cate cc','cc.id=ci.car_cate_id')
 					->join('u_user uu','ci.uid=uu.id')
-					->field('order_num,amount,ci.create_time,compay,name')
+					->field('order_num,cs.compay,cs.phone,amount,ci.create_time')
 					->where('ci.aid',$this->aid)
-				   ->select();
+				   ->paginate(10);
 	}
+
+	/**
+	 * 收入明细详情
+	 * @return 列表
+	 */
+	public function detail()
+	{
+		return Db::table('ca_income ci')
+					->join('cs_shop cs','ci.sid=cs.id')
+					->join('co_car_cate cc','cc.id=ci.car_cate_id')
+					->join('u_user uu','ci.uid=uu.id')
+					->field('order_num,cs.phone,amount,ci.create_time,compay,name')
+					->where('ci.aid',$this->aid)
+				   ->paginate(10);
+	}
+
 
 	/**
 	 * 提现申请页面
@@ -84,7 +100,7 @@ class Capital extends Agent
 		return Db::table('ca_cash_apply')
 					->where('aid',$this->aid)
 					->field('cash_apply_sn,account,money,create_time,audit_time,audit_status')
-					->select();
+					->paginate(10);
 	}
 
 	/**

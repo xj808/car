@@ -1,14 +1,16 @@
 <?php 
 namespace app\agent\controller;
-use think\Controller;
+use app\base\controller\Base;
 use think\Db;
 use Firebase\JWT\JWT;
+
 
 /**
 * 登录
 */
-class Login extends Controller
-{
+class Login extends Base
+{   
+
 	/**
      * 登录
      * @return json
@@ -21,18 +23,17 @@ class Login extends Controller
             if($arr){
                 if(compare_password($data['pass'],$arr['pass'])){
                     $token=$this->token($arr['aid'],$data['login']);
-                    
-                    $msg=['status'=>1,'msg'=>'登录成功','token'=>$token,'status'=>$arr['status']];
+                    $ar=['token'=>$token,'status'=>$arr['status']];
+                    $this->result($ar,1,'登录成功');
                 }else{
-                    $msg=['status'=>0,'msg'=>'密码错误'];
+                    $this->result('',0,'登录失败');
                 }
             }else{
-               $msg=['status'=>0,'msg'=>'用户不存在']; 
+                $this->result('',0,'用户不存在');
             }
         }else{
-            $msg=['status'=>0,'msg'=>$validate->getError()];
+             $this->result('',0,$validate->getError());
         }
-        return $msg;
     }
     
     
@@ -45,7 +46,7 @@ class Login extends Controller
         $data=input('post.');
         $validate=validate('Forget');
         if($validate->check($data)){
-            if($data['code']==123456){
+            if($this->sms->compare($data['phone'],$data['code'])){
                 $res=Db::table('ca_agent')->where('phone',$data['phone'])->setField('pass',get_encrypt($data['pass']));
                 if($res!==false){
                     $msg=['status'=>1,'msg'=>'修改成功'];
@@ -62,7 +63,7 @@ class Login extends Controller
     }
 
 
-        /**
+    /**
      * @param   用户id
      * @param  用户登录账户
      * @return JWT签名
@@ -73,6 +74,21 @@ class Login extends Controller
         $JWT=JWT::encode($token,$key);
         JWT::$leeway = 60;
         return $JWT;
+    }
+
+
+    /**
+     * 修改密码发送手机验证码
+     * @return [type] [发送成功或失败]
+     */
+    public function forCode()
+    {
+        $phone=input('post.phone');
+        // 生成四位验证码
+        $code=$this->apiVerify();
+        $content="您的短信验证码是：【".$code."】。您正在通过手机号重置登录密码，如非本人操作，请忽略该短信。";
+       return  $this->smsVerify($phone,$content,$code);
+
     }
 
 }

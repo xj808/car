@@ -27,7 +27,10 @@ class MaterialAgent extends Agent
 	 */
 	public function incRation()
 	{
+		$data=input('post.');
+
 		$res=$this->upLicense($data['voucher'],$data['price'],$this->aid);
+		
 		if($res){
 			$this->result('',1,'提高配给申请成功');
 		}else{

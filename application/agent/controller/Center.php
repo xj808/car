@@ -10,6 +10,7 @@ use think\File;
 class Center extends Agent{
 	
 	function initialize(){
+		parent::initialize();
 		$this->agent='ca_agent';
 		$this->area='ca_area';
 		$this->agent_set='ca_agent_set';
@@ -22,23 +23,16 @@ class Center extends Agent{
 	 * @return 运营商信息，运营商id
 	 */
 	public function index(){
-		$token=input('post.token');
-		// 根据token获取用户信息
-		$aid=$this->checkToken($token);
-		if(!$aid){
-			$msg=$this->jsonMsg(0,'您没有权限，请先登录。');
-		}else{
 			// 页面数据
-			$list=$this->alist($aid);
-			if($list){
-				$msg=$this->jsonMsg(1,'获取页面数据成功',$list);
-			}else{
-				$msg=$this->jsonMsg(0,'获取页面数据失败');
-			}
-		}
-		
-		return $msg;
+			$list = $this->alist($this->aid);
 
+			if($list){
+				$this->result($list,1,'获取页面数据成功');
+
+			}else{
+				$this->result('',0,'获取页面数据失败');
+			}
+		
 	}
 
 	
@@ -47,31 +41,29 @@ class Center extends Agent{
 	 * @return [type]
 	 */
 	public function setArea(){
-		$data=input('post.');
-		$aid=$this->checkToken($data['token']);
+		$data = input('post.');
 		foreach ($data['county'] as $k => $v) {
-			$area[]=['area'=>$v,'aid'=>$aid];// 获取运营商所选择的区域
+			$area[]=['area'=>$v,'aid'=>$this->aid];// 获取运营商所选择的区域
 		}
 		Db::startTrans();
-		Db::table($this->area)->where('aid',$aid)->delete();
+		Db::table($this->area)->where('aid',$this->aid)->delete();
 		$res=Db::table($this->area)->insertAll($area);
 		if($res){
 			
 			//填写总金额，上传支付凭证
-			$vo=$this->upLicense($data['voucher'],$data['deposit'],$aid);
+			$vo=$this->upLicense($data['voucher'],$data['deposit'],$this->aid);
 			if($vo==true){
 				Db::commit();
-				$msg=['status'=>1,'msg'=>'设置成功'];
+				$this->result('',1,'设置成功');
 			}else{
 				Db::rollback();
-				$msg=['status'=>0,'msg'=>'设置失败'];
+				$this->result('',0,'设置失败');
 			}
 
 		}else{
 			Db::rollback();
-			$msg=['status'=>0,'msg'=>'设置失败1'];
+			$this->result('',0,'设置失败');
 		}
-		return $msg; 
 	}
 
 
@@ -84,11 +76,12 @@ class Center extends Agent{
         $county=$this->commonCounty($city); //未被选中城市
         $selCounty=Db::table('ca_area')->select();//已被选中的城市
         if(!empty($county)){
-            $msg=['status'=>1,'msg'=>'获取列表成功','county'=>$county,'selCounty'=>$selCounty];
+        	$data = ['county'=>$county,'selCounty'=>$selCounty];
+        	$this->result($data,1,'获取列表成功');
         }else{
-            $msg=['status'=>0,'msg'=>'获取列表失败'];
+        	$this->result($data,0,'获取列表失败');
         }
-        return $msg;
+
     }
 	
 	
@@ -97,16 +90,15 @@ class Center extends Agent{
 	 * @return 成功或失败
 	 */
 	public function license(){
-		$token=input('post.token');
-		$aid=$this->checkToken($token);
+
 		$license=input('post.license');
-		$res=Db::table($this->agent)->where('aid',$aid)->setField('license',$license);
+
+		$res=Db::table($this->agent)->where('aid',$this->aid)->setField('license',$license);
 		if($res){
-			$msg=$this->jsonMsg(1,'上传营业执照成功');
+			$this->result('',1,'上传营业执照成功');
 		}else{
-			$msg=$this->jsonMsg(0,'上传营业执照失败');
+			$this->result('',0,'上传营业执照失败');
 		}
-		return $msg;
 	}
 
 	/**
@@ -114,20 +106,25 @@ class Center extends Agent{
 	 * @return 返回地区名称
 	 */
 	public function area(){
-		$token=input('post.token');
-		$aid=$this->checkToken($token);
-		$county=Db::table($this->area)->where('aid',$aid)->select();// 通过区县id获得市级id
+
+		// 通过区县id获得市级id
+		$county=Db::table($this->area)->where('aid',$this->aid)->select();
+
 		$county=array_str($county,'area');
+
 		$city=$this->areaList($county);
 		$province=$this->areaList($city);
+
 		$list=Db::table($this->china)->whereIn('id',$province.','.$city.','.$county)->select();
 		if($list){
+
 			$list=get_child($list,$list[0]['pid']);
-			$msg=$this->jsonMsg(1,'获取列表成功',$list);
+			$this->result($list,1,'获取列表成功');
+
 		}else{	
-			$msg=$this->jsonMsg(0,'暂未设置供应地区');
+
+			$this->result('',0,'暂未设置供应地区');
 		}
-		return $msg;
 	}
 
 	/**
@@ -136,18 +133,21 @@ class Center extends Agent{
 	 */
 	public function editAccount(){
 		$data=input('post.');
-		$res=Db::table($this->agent_set)->where('aid',$data['id'])->update($data);
+		$res=Db::table($this->agent_set)->where('aid',$this->aid)->update($data);
 		if($data['code']==123456){
 			if($res){
-				$msg=['status'=>1,'msg'=>'修改账户成功'];
+				
+				$this->result('',1,'修改账户成功');
 			}else{
-				$msg=['status'=>0,'msg'=>'修改账户失败'];
+
+				$this->result('',0,'修改账户失败');
+		
 			}
 		}else{
-			$msg=['status'=>0,'msg'=>'验证码错误'];
+			$this->result('',0,'修改账户失败');
+
 		}
-		
-		return $msg;
+
 	}
 
 	/**

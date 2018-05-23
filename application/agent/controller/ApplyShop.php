@@ -15,7 +15,7 @@ class ApplyShop extends Agent
 
 	/**
 	 * 修理厂申请物料未审核列表
-	 * @return [type] [description]
+	 * @return [type] [description] 
 	 */
 	public function index()
 	{
@@ -65,7 +65,22 @@ class ApplyShop extends Agent
 		return Db::table('cs_apply sa')
 			->join('cs_shop ss','sa.sid=ss.id')
 			->where(['sa.aid'=>$aid,'sa.audit_status'=>$status])
-			->field('sa.id,compay,leader,phone,sa.create_time,detail,sa.audit_status')
+			->field('sa.sid,compay,leader,phone,sa.create_time')
+			->paginate(10);
+	}
+
+
+	/**
+	 * 修车厂物料申请详情
+	 * @return [json] 修车厂物料列表 
+	 */
+	public function detail($status,$aid)
+	{	
+		$sid = input('post.sid');
+		return Db::table('cs_apply sa')
+			->join('cs_shop ss','sa.sid=ss.id')
+			->where('ss.id',$sid)
+			->field('sa.id,sa.sid,compay,leader,phone,sa.create_time,detail,audit_status')
 			->select();
 	}
 
@@ -77,11 +92,17 @@ class ApplyShop extends Agent
 	{	
 		// 获取该订单id
 		$id=input('post.id');
+		$sid=input('post.sid');
+		Db::startTrans();
+		// 给修车厂发送短信
+		$this->applyCode($sid);
 		//修车厂申请 状态改为已审核
 		$res = $this->status('cs_apply',$id,1);
 		if($res == true){
+			Db::commit();
 			$this->result('',1,'您已确认,请尽快发货');
 		}else{
+			Db::rollback();
 			$this->result('',0,'操作失败');
 		}
 	}
@@ -110,6 +131,14 @@ class ApplyShop extends Agent
 	// 	// $over_time=date("Y-m-d h:i:s",$over_time); 
 	// 	Db::table('cs_apply')->where('id',1)->setField('over_time',$over_time);
 	// }
+	
+
+	private function applyCode($sid)
+	{
+		$phone=Db::table('cs_shop')->where('id',$sid)->value('phone');
+		$content="您申请的货物已发出,请注意查收";
+		return $this->smsVerify($phone,$content);
+	}
 
 
 
