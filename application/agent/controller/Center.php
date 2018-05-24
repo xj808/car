@@ -73,7 +73,9 @@ class Center extends Agent{
      */
     public function selCounty(){
         $city=input('post.id');
+
         $county=$this->commonCounty($city); //未被选中城市
+
         $selCounty=Db::table('ca_area')->select();//已被选中的城市
         if(!empty($county)){
         	$data = ['county'=>$county,'selCounty'=>$selCounty];
@@ -127,27 +129,118 @@ class Center extends Agent{
 		}
 	}
 
+
 	/**
 	 * 修改账户信息
 	 * @return 修改成功或失败
 	 */
 	public function editAccount(){
-		$data=input('post.');
-		$res=Db::table($this->agent_set)->where('aid',$this->aid)->update($data);
-		if($data['code']==123456){
-			if($res){
-				
-				$this->result('',1,'修改账户成功');
-			}else{
 
-				$this->result('',0,'修改账户失败');
-		
+		$data=input('post.');
+		$validate=validate('Account');
+		if($validate->check($data)){
+			if($this->sms->compare($data['phone'],$data['code'])){
+
+				$res=Db::table($this->agent_set)->where('aid',$this->aid)->update($data);
+
+				if($res){
+					
+					$this->result('',1,'修改账户成功');
+				}else{
+
+					$this->result('',0,'修改账户失败');
+				}
+			}else{
+				$this->result('',0,'手机验证码错误');
+
 			}
 		}else{
-			$this->result('',0,'修改账户失败');
-
+			$this->result('',0,$validate->getError());
 		}
+		
 
+	}
+
+
+	/**
+	 * 发送修改账户信息的验证码
+	 * @return [type] [description]
+	 */
+	public function accountCode()
+	{
+		$phone=input('post.phone');
+		// 生成四位验证码
+        $code=$this->apiVerify();
+
+		$content="您的验证码是：【".$code."】。请不要把验证码泄露给其他人。";
+
+		return $this->smsVerify($phone,$content,$code);
+	}
+
+
+	/**
+	 * 修改密码
+	 * @return [type] [description]
+	 */
+	public function modifyPass()
+	{
+		$data=input('post.');
+		$validate=validate('ModifyPass');
+		if($validate->check($data)){
+			// 判断原密码是否输入正确
+			if($this->pass($data['pass'],$this->aid) == false){
+
+				$this->result('',0,'请输入正确的原密码');
+			}
+			// 判断手机验证码是否正确
+			if($this->sms->compare($data['phone'],$data['code'])){
+
+				if($this->xPass(get_encrypt($data['npass']),$this->aid)){
+
+					$this->result('',1,'修改密码成功');
+
+				}else{
+
+					$this->result('',0,'修改密码失败');
+				}
+
+			}else{
+				$this->result('',0,'手机验证码错误');
+			}
+			
+		}else{
+			$this->result('',0,$validate->getError());
+		}
+	}
+
+	/**
+	 * 判断原密码是否正确
+	 * @param  [type] $npass [修改的原密码]
+	 * @param  [type] $aid   [运营商id]
+	 * @return [type]        [布尔值]
+	 */
+	private function pass($pass,$aid)
+	{	
+		$pwd=Db::table('ca_agent')->where('aid',$aid)->value('pass');
+		if(get_encrypt($pass) !== $pwd){
+			return false;
+		}else{
+			return true;
+		}
+	}
+
+	/**
+	 * 修改密码
+	 * @param  [type] $npass [新密码]
+	 * @param  [type] $aid   [运营商id]
+	 * @return [type]        [布尔值]
+	 */
+	private function xPass($npass,$aid)
+	{
+		$res=Db::table('ca_agent')->where('aid',$aid)->setField('pass',$npass);
+		if($res !== false){
+			return true;
+		}
 	}
 
 	/**
@@ -157,9 +250,10 @@ class Center extends Agent{
 	 */
 	private function alist($aid){
 		$list=Db::table('ca_agent a')
-			->leftjoin('ca_agent_set as','a.aid=as.aid')	
+			->join('ca_agent_set as','a.aid=as.aid')
+			->join('ca_increase ci','as.aid=ci.aid')	
 			->where('a.aid',$aid)
-			->field('a.aid,login,compay,account,leader,province,city,county,address,phone,open_shop,license')
+			->field('a.aid,login,compay,account,leader,province,city,county,address,phone,open_shop,license,voucher')
 			->find();
 		return $list;
 	}

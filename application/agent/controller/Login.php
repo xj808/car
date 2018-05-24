@@ -77,18 +77,6 @@ class Login extends Base
     }
 
 
-    /**
-     * 修改密码发送手机验证码
-     * @return [type] [发送成功或失败]
-     */
-    public function forCode()
-    {
-        $phone=input('post.phone');
-        // 生成四位验证码
-        $code=$this->apiVerify();
-        $content="您的短信验证码是：【".$code."】。您正在通过手机号重置登录密码，如非本人操作，请忽略该短信。";
-       return  $this->smsVerify($phone,$content,$code);
-
-    }
+    
 
 }

@@ -10,7 +10,7 @@ class Account extends Validate
       'bank_name|开户名'	=>	'require',
       'branch|开户行' =>  'require',
       'phone|手机号'  =>'require|mobile', 
-      'code|验证码'	=>	'require'
+      'code|验证码'	=>	'require|length:4'
     ];
 
 }

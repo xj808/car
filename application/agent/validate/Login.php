@@ -15,9 +15,3 @@ class Login extends Validate
     ];
 
 }
-
-
-
-
-
- ?>
