@@ -14,6 +14,7 @@ class Agent extends Base
      */
     function initialize()
     {   
+    	parent::initialize();
         $this->aid=$this->ifToken();
     }
 
@@ -113,6 +114,8 @@ class Agent extends Base
         return Db::table('co_china_data')->where('pid',$city_id)->select();
     }
 
+
+   
 
    
 
