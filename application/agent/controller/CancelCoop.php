@@ -13,30 +13,50 @@ class CancelCoop extends Agent
 		parent::initialize();
 	}
 
-
+	/**
+	 * 取消合作操作
+	 * @return [type] [description]
+	 */
 	public function index()
 	{	
-		// 获取运营商名称、负责人
-		$agent=Db::table('ca_agent')->where('aid',$this->aid)->find();
-		$this->cityList($this->aid);
+		// 获取取消合作理由
+		$reason = input('post.reason');
+		if($reason){
+
+			$data = $this->aDatil($this->aid);
+			$data['reason'] = $reason;
+			$data['count_down'] = time()+2592000;
+			$data['aid']=$this->aid;
+			if(Db::table('ca_cancel')->json(['region'])->insert($data)){
+				$this->result('',1,'取消合作申请成功,请在三十天之内做好交接');
+			}else{
+				$this->result('',0,'取消合作失败');
+			}
+
+		}else{
+			$this->result('',0,'取消合作理由不能为空');
+		}
+		
 		
 	}
 
 
-
-	public function cityList($aid)
+	/**
+	 * 获取运营商公司名、负责人、所管辖地区id
+	 * @param  [type] $aid [ 运营商id ]
+	 * @return [type]      [description]
+	 */
+	public function aDatil($aid)
 	{
-		// 获取运营商所管辖区域
-		$county=Db::table('ca_area')->where('aid',$aid)->column('area');
-
-		$data=get_child($data,1);
-		
-		print_r($data);exit;
-		// // 获取省级id
-		// $province=Db::table('co_china_data')->whereIn('id',$city_id)->select();
-		// print_r($province);exit;
+		// 运营商公司名负责人
+		$data=Db::table('ca_agent')->where('aid',$aid)->field('compay,leader')->find();
+		// 运营商管辖区县id
+		$area=Db::table('ca_area')->where('aid',$aid)->column('area');
+		$data['region']=$area;
+		return $data;
 		
 	}
+
 
 	
 }

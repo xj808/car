@@ -141,7 +141,7 @@ class Center extends Agent{
 		if($validate->check($data)){
 			if($this->sms->compare($data['phone'],$data['code'])){
 
-				$res=Db::table($this->agent_set)->where('aid',$this->aid)->update($data);
+				$res=Db::table($this->agent)->where('aid',$this->aid)->update($data);
 
 				if($res){
 					
@@ -250,8 +250,7 @@ class Center extends Agent{
 	 */
 	private function alist($aid){
 		$list=Db::table('ca_agent a')
-			->join('ca_agent_set as','a.aid=as.aid')
-			->join('ca_increase ci','as.aid=ci.aid')	
+			->leftJoin('ca_increase ci','a.aid=ci.aid')	
 			->where('a.aid',$aid)
 			->field('a.aid,login,compay,account,leader,province,city,county,address,phone,open_shop,license,voucher')
 			->find();
@@ -280,46 +279,6 @@ class Center extends Agent{
 		}
 	}
 
-	/**
-	 * 修改shop_set表状态为1已设置过地区
-	 * @param 运营商id
-	 * @return 布尔值
-	 */
-	private function ifSet($aid){
-		$res=Db::table($this->agent_set)->where('aid',$aid)->setField('if_set',1);
-		if($res){
-			return true;
-		}
-	}
-
-	/**
-	 * 查询agent_set是否已经有该运营商的数据
-	 * @param 数据条数
-	 */
-	private function setAid($aid){
-		return $count=Db::table($this->agent_set)->where('aid',$aid)->count();
-	}
-
-
-
-
-	// private function beiyong()		
-	// {
-	// // 获取可开通店铺数量
-		// $shop_nums=$deposit/7000;
-		// $arr=['aid'=>$aid];
-	// 	// 判断agent_set是否有运营商信息
-	// 	if($this->setAid($aid) == 0){
-	// 			// 插入agent_set 运营商id
-	// 			Db::table($this->agent_set)->insert($arr);
-	// 		}
-	// 		// 每次运营商提交支付凭证之后，agent_set表的总押金数和总开通店铺数增加
-	// 		$res=Db::table($this->agent_set)
-	// 			->where('aid',$aid)
-	// 			->Inc(['deposit'=>$deposit,'shop_nums'=>$shop_nums])
-	// 			->update();($value='').
-	// }
-	
 	
 	
 }
