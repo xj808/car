@@ -20,12 +20,13 @@
  function upload($image,$path){
     // 获取表单上传文件 例如上传了001.jpg
     $file = request()->file($image);
+    $a='http://192.168.1.110/cyc/public';
     // 移动到框架应用根目录/uploads/ 目录下
     $info = $file->move('./uploads/'.$path);
     if($info){
         // 成功上传后 获取上传信息
         // 输出 20160820/42a79759f284b767dfcb2a0197904287.jpg
-        return  './uploads/'.$path.'/'.$info->getSaveName();
+        return  $a.'/uploads/'.$path.'/'.$info->getSaveName();
     }else{
         // 上传失败获取错误信息
         return  $file->getError();
