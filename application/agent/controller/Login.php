@@ -1,7 +1,6 @@
 <?php 
 namespace app\agent\controller;
 use app\base\controller\Base;
-use think\Db;
 use Firebase\JWT\JWT;
 
 

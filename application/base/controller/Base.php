@@ -67,18 +67,15 @@ class Base extends Controller{
      * 获取市级
      * @return 市级地区名称
      */
-    public function city(){
-        // 获取省级id
-        $province_id=input('post.id');
-        return Db::table('co_china_data')->where('pid',$province_id)->select();
+    public function city($pid){
+        return Db::table('co_china_data')->where('pid',$pid)->select();
     }
 
     /**
      * @return 获取城市名称
      */
-    public function county(){
-        $city=input('post.id');
-        return Db::table('co_china_data')->where('pid',$city)->select();
+    public function county($cid){
+        return Db::table('co_china_data')->where('pid',$cid)->select();
     }
 
 

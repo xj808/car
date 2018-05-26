@@ -1,7 +1,6 @@
 <?php
 namespace  app\agent\controller;
 use app\base\controller\Agent;
-use think\Db;
 /**
 * 取消合作模块
 */
