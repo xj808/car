@@ -26,7 +26,7 @@
     $info = $file->validate(['size'=>15678,'ext'=>'jpg,png,jpeg'])->move( './uploads'.$path);
     // 上传成功后输出信息
     if($ifno){
-      return  $a.'/uploads/'.$path.'/'.$info->getSaveName();
+      return  $host.'/uploads/'.$path.'/'.$info->getSaveName();
     }else{
       // 上传失败获取错误信息
       return  $file->getError();
