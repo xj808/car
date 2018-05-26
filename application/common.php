@@ -23,7 +23,7 @@
     // 获取表单上传文件
     $file = request()->file($image);
     // 进行验证并进行上传
-    $info = $file->validate(['size'=>3145728,'ext'=>'jpg,png,jpeg'])->move( './uploads'.$path);
+    $info = $file->validate(['size'=>3145728,'ext'=>'jpg,png,jpeg'])->move( './uploads/'.$path);
     // 上传成功后输出信息
     if($info){
       return  $host.'/uploads/'.$path.'/'.$info->getSaveName();
