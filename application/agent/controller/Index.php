@@ -2,6 +2,7 @@
 namespace app\agent\controller;
 use app\base\controller\Agent;
 use msg\Msg;
+use think\Db;
 /**
 * 运营商首页，信息页面
 */
@@ -85,7 +86,7 @@ class Index extends Agent
 	 * @return [type] [description]
 	 */
 	public function shopNum(){
-		return Db::table('ca_agent_set')->where('aid',$this->aid)->value('open_shop');
+		return Db::table('ca_agent')->where('aid',$this->aid)->value('open_shop');
 	}
 	
 }

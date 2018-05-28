@@ -1,6 +1,7 @@
 <?php
 namespace app\agent\controller;
 use app\base\controller\Agent;
+use think\Db;
 /**
 * 修理厂配给
 */

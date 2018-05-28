@@ -2,6 +2,7 @@
 namespace app\agent\controller;
 use app\base\controller\Base;
 use Firebase\JWT\JWT;
+use think\Db;
 
 
 /**

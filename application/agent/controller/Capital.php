@@ -1,6 +1,7 @@
 <?php
 namespace app\agent\controller;
 use app\base\controller\Agent;
+use think\Db;
 /**
 * 资金管理
 */
@@ -22,7 +23,7 @@ class Capital extends Agent
 					->join('cs_shop cs','ci.sid=cs.id')
 					->join('co_car_cate cc','cc.id=ci.car_cate_id')
 					->join('u_user uu','ci.uid=uu.id')
-					->field('order_num,cs.compay,cs.phone,amount,ci.create_time')
+					->field('ci.id,order_num,cs.company,cs.phone,amount,ci.create_time')
 					->where('ci.aid',$this->aid)
 				   ->paginate(10);
 	}
@@ -32,13 +33,14 @@ class Capital extends Agent
 	 * @return 列表
 	 */
 	public function detail()
-	{
+	{	
+		$id=input('post.id');
 		return Db::table('ca_income ci')
 					->join('cs_shop cs','ci.sid=cs.id')
 					->join('co_car_cate cc','cc.id=ci.car_cate_id')
 					->join('u_user uu','ci.uid=uu.id')
-					->field('order_num,cs.phone,amount,ci.create_time,compay,name')
-					->where('ci.aid',$this->aid)
+					->field('order_num,cs.phone,amount,ci.create_time,company,name')
+					->where('ci.id',$id)
 				   ->paginate(10);
 	}
 
@@ -111,7 +113,7 @@ class Capital extends Agent
 	public function ifMoney($money,$aid)
 	{
 		// 获取运营商现有所有收入
-		$balance=Db::table('ca_agent_set')->where('aid',$aid)->value('balance');
+		$balance=Db::table('ca_agent')->where('aid',$aid)->value('balance');
 		if($balance>=$money){
 			return true;
 		}

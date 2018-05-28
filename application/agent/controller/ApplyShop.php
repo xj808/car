@@ -1,6 +1,7 @@
 <?php
 namespace app\agent\controller;
 use app\base\controller\Agent;
+use think\Db;
 /**
 * 修车厂物料申请
 */
@@ -64,7 +65,7 @@ class ApplyShop extends Agent
 		return Db::table('cs_apply sa')
 			->join('cs_shop ss','sa.sid=ss.id')
 			->where(['sa.aid'=>$aid,'sa.audit_status'=>$status])
-			->field('sa.sid,compay,leader,phone,sa.create_time')
+			->field('sa.sid,company,leader,phone,sa.create_time')
 			->paginate(10);
 	}
 
@@ -79,7 +80,7 @@ class ApplyShop extends Agent
 		return Db::table('cs_apply sa')
 			->join('cs_shop ss','sa.sid=ss.id')
 			->where('ss.id',$sid)
-			->field('sa.id,sa.sid,compay,leader,phone,sa.create_time,detail,audit_status')
+			->field('sa.id,sa.sid,company,leader,phone,sa.create_time,detail,audit_status')
 			->select();
 	}
 

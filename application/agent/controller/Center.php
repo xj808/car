@@ -2,6 +2,7 @@
 namespace app\agent\controller;
 use app\base\controller\Agent;
 use think\File;
+use think\Db;
 
 /**
 * 个人中心
@@ -73,7 +74,7 @@ class Center extends Agent{
     public function selCounty(){
         $city=input('post.id');
 
-        $county=$this->commonCounty($city); //未被选中城市
+        $county=$this->city($city); //未被选中城市
 
         $selCounty=Db::table('ca_area')->select();//已被选中的城市
         if(!empty($county)){
@@ -171,7 +172,7 @@ class Center extends Agent{
 		// 生成四位验证码
         $code=$this->apiVerify();
 
-		$content="您的验证码是：【".$code."】。请不要把验证码泄露给其他人。";
+		$content="您的验证码是：【".$code."】。请不要把验证码泄露给其他人";
 
 		return $this->smsVerify($phone,$content,$code);
 	}
@@ -251,7 +252,7 @@ class Center extends Agent{
 		$list=Db::table('ca_agent a')
 			->leftJoin('ca_increase ci','a.aid=ci.aid')	
 			->where('a.aid',$aid)
-			->field('a.aid,login,compay,account,leader,province,city,county,address,phone,open_shop,license,voucher')
+			->field('a.aid,login,company,account,leader,province,city,county,address,phone,open_shop,license,voucher')
 			->find();
 		return $list;
 	}

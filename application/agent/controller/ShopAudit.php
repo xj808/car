@@ -1,6 +1,7 @@
 <?php
 namespace app\agent\controller;
 use app\base\controller\Agent;
+use think\Db;
 /**
 * 修车厂审核管理
 */
@@ -36,7 +37,7 @@ class ShopAudit extends Agent
 		$where=[['aid','=',$this->aid],['audit_status','=',$status]];
 		return Db::table('cs_shop')
 				->where($where)
-				->field('id,compay,leader,phone,create_time,service_num')
+				->field('id,company,leader,phone,create_time,service_num')
 				->select();
 	}
 
@@ -51,7 +52,7 @@ class ShopAudit extends Agent
 		$sid=input('post.id');
 		return Db::table('cs_shop s')
 				->join('cs_shop_set ss','s.id=ss.sid')
-				->field('usname,compay,major,leader,province,city,county,address,phone,service_num,license,photo,aid,sid')
+				->field('usname,company,major,leader,province,city,county,address,phone,service_num,license,photo,aid,sid')
 				->where('s.id',$sid)
 				->select();
 	}

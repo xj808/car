@@ -1,6 +1,7 @@
 <?php
 namespace  app\agent\controller;
 use app\base\controller\Agent;
+use think\Db;
 /**
 * 取消合作模块
 */
@@ -48,7 +49,7 @@ class CancelCoop extends Agent
 	public function aDatil($aid)
 	{
 		// 运营商公司名负责人
-		$data=Db::table('ca_agent')->where('aid',$aid)->field('compay,leader')->find();
+		$data=Db::table('ca_agent')->where('aid',$aid)->field('company,leader')->find();
 		// 运营商管辖区县id
 		$area=Db::table('ca_area')->where('aid',$aid)->column('area');
 		$data['region']=$area;

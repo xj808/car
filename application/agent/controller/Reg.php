@@ -1,6 +1,7 @@
 <?php 
 namespace app\agent\controller;
 use app\base\controller\Base;
+use think\Db;
 /**
 * 注册登录
 */
@@ -46,6 +47,39 @@ class Reg extends Base{
         $code=$this->apiVerify();
 		$content="您的验证码是：【".$code."】。请不要把验证码泄露给其他人。";
 		return $this->smsVerify($phone,$content,$code);
+	}
+
+
+	/**
+	 * 省
+	 * @return [type] [description]
+	 */
+	public function regPro()
+	{
+		return $this->province();
+	}
+
+	/**
+	 * 市
+	 * @return [type] [description]
+	 */
+	public function regCity()	
+	{	
+		// 省id
+		$id=input('post.id');
+		return $this->city($id);
+	}
+
+
+	/**
+	 * 区县
+	 * @return [type] [description]
+	 */
+	public function regCounty()
+	{
+		// 市区id
+		$id = input('post.id');
+		return $this->county($id);
 	}
 	
 	

@@ -1,6 +1,7 @@
 <?php
 namespace  app\agent\controller;
 use app\base\controller\Agent;
+use think\Db;
 /**
 * 运营商的物料库存
 */
@@ -101,6 +102,8 @@ class MaterialAgent extends Agent
 					'materiel_id'=>$v['id']
 				];
 				$ar[]=$arr;
+			}else{
+				$ar[]='';
 			}
 		}
 		return $ar;
