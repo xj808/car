@@ -95,3 +95,33 @@ function array_str($data,$key){
       }
      return $arr;
   };
+
+  /**
+   * 生成唯一编号
+   * @return [type] [description]
+   */
+function build_only_sn()
+{
+    $arr = explode(' ',microtime());
+    $num = $arr[0]*10000000000 + $arr[1] - $arr[0]*1000000;
+    $num = str_pad($num,11,mt_rand(0,9));
+    $num = str_pad($num,12,mt_rand(0,9));
+    return  $num;
+}
+
+
+/**
+ * 生成唯一订单编号
+ * @return [type] [description]
+ */
+function build_order_sn()
+{
+    return str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT) . time();
+}
+
+
+
+
+
+
+  
