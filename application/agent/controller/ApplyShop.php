@@ -65,7 +65,7 @@ class ApplyShop extends Agent
 		return Db::table('cs_apply sa')
 			->join('cs_shop ss','sa.sid=ss.id')
 			->where(['sa.aid'=>$aid,'sa.audit_status'=>$status])
-			->field('sa.sid,company,leader,phone,sa.create_time')
+			->field('sa.id,sa.sid,company,leader,phone,sa.create_time')
 			->paginate(10);
 	}
 
@@ -76,10 +76,10 @@ class ApplyShop extends Agent
 	 */
 	public function detail($status,$aid)
 	{	
-		$sid = input('post.sid');
+		$id = input('post.id');
 		return Db::table('cs_apply sa')
 			->join('cs_shop ss','sa.sid=ss.id')
-			->where('ss.id',$sid)
+			->where('sa.id',$id)
 			->field('sa.id,sa.sid,company,leader,phone,sa.create_time,detail,audit_status')
 			->select();
 	}

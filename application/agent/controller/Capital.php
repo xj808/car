@@ -52,8 +52,6 @@ class Capital extends Agent
 	public function forward()
 	{	
 		$arr = Db::table('ca_agent ca')
-				->join('ca_agent_set as','ca.aid=as.aid')
-				->where('ca.aid',$this->aid)
 				->field('bank,account,bank_name,balance')
 				->find();
 		if($arr){
