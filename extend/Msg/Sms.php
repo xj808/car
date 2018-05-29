@@ -21,6 +21,7 @@ class Sms {
     	if($gets['SubmitResult']['code'] == 2){
     		if($code !== '') \Cache::set('sms_'.$mobile,$code,600);
 		}
+
 		return $gets['SubmitResult']['msg'];
     }
 

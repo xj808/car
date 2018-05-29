@@ -26,31 +26,39 @@ class Msg
 	/**
 	 * 获取当前信息列表
 	 */
-	public function msgList($table,$uid)
+	public function msgList($table,$uid,$page)
 	{	
-		return 	Db::table($table)
+		$pageSize = 10;
+		$count = Db::table($table)->where('uid',$uid)->count();
+		$rows = ceil($count / $pageSize);
+		$list = Db::table($table)
 				->alias('um')
 				->join(['am_msg'=>'am'],'um.mid = am.id')
-				->field('mid,status,title,create_time')
+				->field('mid,status,title,content,create_time')
 				->where('uid',$uid)
 				->order('um.mid desc')
-				->paginate(10);
+				->page($page,$pageSize)->select();
+		return ['list'=>$list,'rows'=>$rows];
 	}
 
 
 	/**
 	 * 获取当前信息已读未读列表
 	 */
-	public function msgLists($table,$uid,$status)
+	public function msgLists($table,$uid,$status,$page)
 	{	
+		$pageSize = 10;
+		$count = Db::table($table)->where('uid',$uid)->count();
+		$rows = ceil($count / $pageSize);
 		$where=[['uid','=',$uid],['status','=',$status]];
-		return 	Db::table($table)
+		$list = Db::table($table)
 				->alias('um')
 				->join(['am_msg'=>'am'],'um.mid = am.id')
-				->field('mid,status,title,create_time')
+				->field('mid,status,title,content,create_time')
 				->where($where)
 				->order('um.mid desc')
-				->paginate(10);
+				->page($page,$pageSize)->select();
+		return ['list'=>$list,'rows'=>$rows];
 	}
 
 
