@@ -27,7 +27,7 @@ class CancelCoop extends Agent
 			$data['reason'] = $reason;
 			$data['count_down'] = time()+2592000;
 			$data['aid']=$this->aid;
-			if(Db::table('ca_cancel')->json(['region'])->insert($data)){
+			if(Db::table('ca_apply_cancel')->json(['region'])->insert($data)){
 				$this->result('',1,'取消合作申请成功,请在三十天之内做好交接');
 			}else{
 				$this->result('',0,'取消合作失败');

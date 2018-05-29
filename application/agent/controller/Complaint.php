@@ -14,12 +14,20 @@ class Complaint extends Agent
 	 */
 	public function index()
 	{
-		$token = input('post.token');
-		return Db::table('u_complain uc')
-			->join('u_user uu','uc.uid = uu.id')
-			->where('uc.aid',$this->aid)
-			->field('uc.id,company,name,uu.phone,title,uc.create_time')
-			->paginate(10);
+		$page = input('post.page') ? : 1;
+		$pageSize = 10;
+		$count = Db::table('u_complain')->where('aid',$this->aid)->count();
+		$rows = ceil($count / $pageSize);
+		$list = Db::table('u_complain uc')
+				->join('u_user uu','uc.uid = uu.id')
+				->where('uc.aid',$this->aid)
+				->field('uc.id,company,name,uu.phone,title,uc.create_time')
+				->order('id desc')->page($page,$pageSize)->select();
+		if($count > 0){                   
+			$this->result(['list'=>$list,'rows'=>$rows],1,'获取成功');
+		}else{
+			$this->result('',0,'暂无数据');
+		}
 	}
 
 

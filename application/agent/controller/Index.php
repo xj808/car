@@ -43,11 +43,12 @@ class Index extends Agent
 	 * @return json  消息列表数据
 	 */
 	public function msgList(){
-		$list=$this->coMsg->msgList($this->msg,$this->aid);
+		$page = input('post.page') ? : 1;
+		$list=$this->coMsg->msgList($this->msg,$this->aid,$page);
 		if($list){
 			$this->result($list,1,'获取消息列表成功');
 		}else{
-			$this->result($datil,0,'获取消息列表失败');
+			$this->result($datil,0,'暂无数据');
 		}
 	}
 
@@ -58,11 +59,12 @@ class Index extends Agent
 	 */
 	public function unread()
 	{	
+		$page = input('post.page') ? : 1;
 		$list=$this->coMsg->msgLists($this->msg,$this->aid,0);
 		if(!$list){
 			$this->result($list,1,'获取未读消息列表成功');
 		}else{
-			$this->result($list,1,'获取未读消息列表成功');
+			$this->result($list,1,'暂无数据');
 		}
 	}
 
@@ -73,6 +75,7 @@ class Index extends Agent
 	 */
 	public function read()
 	{
+		$page = input('post.page') ? : 1;
 		$list=$this->coMsg->msgLists($this->msg,$this->aid,1);
 		if($list){
 			$this->result($list,1,'获取已读消息列表成功');

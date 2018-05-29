@@ -13,8 +13,18 @@ class ShopRation extends Agent
 	 */
 	public function index()
 	{	
+		$page = input('post.page');
+		$pageSize = 10;
 		$where=[['aid','=',$this->aid],['audit_status','=',2]];
-		return Db::table('cs_shop')->where($where)->select();
+		$count = Db::table('cs_shop')->where($where)->count();
+		$rows = ceil($count / $pageSize);
+
+		$list=Db::table('cs_shop')->where($where)->select();
+		if($count > 0){                   
+			$this->result(['list'=>$list,'rows'=>$rows],1,'获取成功');
+		}else{
+			$this->result('',0,'暂无数据');
+		}
 	}
 
 	/**
@@ -62,6 +72,8 @@ class ShopRation extends Agent
 		}
 		$res=Db::table('cs_increase')->json(['record'])->insertAll($data);
 	}
+
+
 
 	/**
 	 * 增加修车厂配给和库存

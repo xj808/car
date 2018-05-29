@@ -35,7 +35,7 @@ class ShopCancel extends Agent
 	public function auditStatus($status)
 	{
 		
-		return Db::table('cs_cancel')->where(['aid'=>$this->aid,'audit_status'=>$status])->field('id,sid,company,leader,reason,form,create_time')->select();
+		return Db::table('cs_apply_cancel')->where(['aid'=>$this->aid,'audit_status'=>$status])->field('id,sid,company,leader,reason,form,create_time')->select();
 	}
 
 
@@ -80,7 +80,7 @@ class ShopCancel extends Agent
 	public function detail()
 	{	
 		$sid = input('post.sid');
-		$ration=Db::table('cs_cancel')->where('sid',$sid)->json(['detail'])->find();
+		$ration=Db::table('cs_apply_cancel')->where('sid',$sid)->json(['detail'])->find();
 		$user_oil=$this->userCar($sid);
 		return $data=['ration'=>$ration['detail'],'user_oil'=>$user_oil];
 	}
@@ -96,7 +96,7 @@ class ShopCancel extends Agent
 		$res = Db::table('cs_shop')->where('id',$sid)->setField('audit_status',4);
 		if($res !== false){
 			// 修改取消合作表审核时间
-			$re = Db::table('cs_cancel')->where('id',$sid)->setField('audit_time',time());
+			$re = Db::table('cs_apply_cancel')->where('id',$sid)->setField('audit_time',time());
 			if($re !== false){
 				return true;
 			}
@@ -232,7 +232,7 @@ class ShopCancel extends Agent
 		}
 
 		$arr=['detail'=>$data];
-		$res = Db::table('cs_cancel')->json(['detail'])->where('sid',$sid)->update($arr);
+		$res = Db::table('cs_apply_cancel')->json(['detail'])->where('sid',$sid)->update($arr);
 		if($res !== false){
 			return true;
 		}

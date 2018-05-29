@@ -19,13 +19,23 @@ class Capital extends Agent
 	 */
 	public function index()
 	{
-		return Db::table('ca_income ci')
+		$page = input('post.page') ? : 1;
+		$pageSize = 10;
+		$count = Db::table('ca_income')->where('aid',$this->aid)->count();
+		$rows = ceil($count / $pageSize);
+		$list=Db::table('ca_income ci')
 					->join('cs_shop cs','ci.sid=cs.id')
 					->join('co_car_cate cc','cc.id=ci.car_cate_id')
 					->join('u_user uu','ci.uid=uu.id')
-					->field('ci.id,order_num,cs.company,cs.phone,amount,ci.create_time')
 					->where('ci.aid',$this->aid)
-				   ->paginate(10);
+					->field('ci.id,odd_number,cs.company,cs.phone,amount,ci.create_time')
+					->order('id desc')
+					->page($page,$pageSize)->select();
+		if($count > 0){
+			$this->result(['list'=>$list,'rows'=>$rows],1,'获取成功');
+		}else{
+			$this->result('',0,'暂无数据');
+		}
 	}
 
 	/**
@@ -39,7 +49,7 @@ class Capital extends Agent
 					->join('cs_shop cs','ci.sid=cs.id')
 					->join('co_car_cate cc','cc.id=ci.car_cate_id')
 					->join('u_user uu','ci.uid=uu.id')
-					->field('order_num,cs.phone,amount,ci.create_time,company,name')
+					->field('odd_number,cs.phone,amount,ci.create_time,company,name')
 					->where('ci.id',$id)
 				   ->paginate(10);
 	}
@@ -75,7 +85,7 @@ class Capital extends Agent
 			if($this->ifMoney($data['money'],$this->aid)){
 				$data['cash_apply_sn']=rand().time();
 				$data['aid']=$this->aid;
-				$res=Db::table('ca_cash_apply')->strict(false)->insert($data);
+				$res=Db::table('ca_apply_cash')->strict(false)->insert($data);
 				if($res){
 					$this->result('',1,'申请成功,请等待审核');
 				}else{
@@ -96,10 +106,20 @@ class Capital extends Agent
 	 */
 	public function cash()
 	{	
-		return Db::table('ca_cash_apply')
-					->where('aid',$this->aid)
-					->field('cash_apply_sn,account,money,create_time,audit_time,audit_status')
-					->paginate(10);
+		$page = input('post.page');
+		$pageSize = 10;
+		$count = Db::table('ca_apply_cash')->where('aid',$this->aid)->count();
+		$rows = ceil($count / $pageSize);
+		
+		$list = Db::table('ca_apply_cash')
+				->where('aid',$this->aid)
+				->field('cash_apply_sn,account,money,create_time,audit_time,audit_status')
+				->order('id desc')->page($page,$pageSize)->select();
+		if($count > 0){
+			$this->result(['list'=>$list,'rows'=>$rows],1,'获取成功');
+		}else{
+			$this->result('',0,'暂无数据');
+		}
 	}
 
 	/**

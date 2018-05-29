@@ -14,11 +14,21 @@ class MaterialAgent extends Agent
 	 */
 	public function index()
 	{
-		return Db::table('ca_ration ar')
+		$page = input('post.page');
+		$pageSize = 10;
+		$count = Db::table('ca_ration')->where('aid',$this->aid)->count();
+		$rows = ceil($count / $pageSize);
+		$list = Db::table('ca_ration ar')
 				->join('co_bang_cate bc','ar.materiel=bc.id')
 				->field('name,materiel_stock')
 				->where('aid',$this->aid)
-				->select();
+				->order('id desc')->page($page,$pageSize)->select();
+
+		if($count > 0){                   
+			$this->result(['list'=>$list,'rows'=>$rows],1,'获取成功');
+		}else{
+			$this->result('',0,'暂无数据');
+		}
 	}
 
 	/**
@@ -63,7 +73,7 @@ class MaterialAgent extends Agent
 		$data=input('post.');
 
 		$ar=$this->detail($data);
-			$res=Db::table('ca_apply')->json(['detail'])->insert($ar);
+			$res=Db::table('ca_apply_materiel')->json(['detail'])->insert($ar);
 			if($res){
 				$this->success('',1,'申请成功');
 			}else{
@@ -94,7 +104,7 @@ class MaterialAgent extends Agent
 	private function ifApply($data)
 	{
 		foreach ($data as $k => $v) {
-			if($v['materiel_stock']/$v['warning']<0.5){
+			if($v['materiel_stock']/$v['warning']<=0.5){
 				$arr=[
 					'materiel'=>$v['name'],
 					'materiel_stock'=>$v['materiel_stock'],
@@ -117,10 +127,10 @@ class MaterialAgent extends Agent
 	private function detail($data)
 	{
 		foreach ($data['materiel_id'] as $k => $v) {
-			$arr[]=['materiel'=>$v,'num'=>$data['num'][$k],'remarks'=>$data['remarks'][$k]];
+			$arr[]=['materiel_id'=>$v,'materiel'=>$data['materiel'][$k],'num'=>$data['num'][$k],'remarks'=>$data['remarks'][$k]];
 		};
 		$ar=[
-			'apply_sn'=>rand(1111,9999).'apply'.time(),
+			'apply_sn'=>build_order_sn(),
 			'aid'=>$this->aid,
 			'detail'=>$arr,
 		];
