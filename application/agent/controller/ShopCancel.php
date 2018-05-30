@@ -8,6 +8,48 @@ use think\Db;
 class ShopCancel extends Agent
 {
 	/**
+	 * 运营商直接取消和修车厂的合作
+	 * @return [type] [description]
+	 */
+	public function agentShop()
+	{
+		$data = input('post.');
+		Db::startTrans();
+		// 发送短信给被取消运营商下面的用户
+		$res = $this->smsCancel($data['sid'],$data['content'],$data['company'],$data['reason']);
+		if($res == ture){
+			// 修改修车厂审核状态shop表
+			if($this->setStatus($data['sid'])){
+				// 增加运营商库存
+				if($this->agentMateriel($data['sid'],$this->aid)){
+					// 增加运营商可开店数量
+					if($this->shopNum($data['sid'],$this->aid)){
+
+						Db::commit();
+						$this->result('',1,'操作成功');
+					}else{
+						Db::rollback();
+						$this->result('',0,'操作失败');
+					}
+
+				}else{
+					Db::rollback();
+					$this->result('',0,'增加运营商库存失败');
+				}
+
+			}else{
+				Db::rollback();
+				$this->result('',0,'修改修车厂状态失败');
+			}
+			
+		}else{
+			Db::rollback();
+			$this->result('',0,'发送信息失败');
+		}
+	}
+
+
+	/**
 	 * 已审核列表
 	 * @return [type] [description]
 	 */
@@ -59,8 +101,7 @@ class ShopCancel extends Agent
 		$this->shopNum($data['sid'],$this->aid);
 		// 清空取消合作修车厂的库存
 		// 给用户发送消息
-		$content=$data['company'].'因'.$data['reason'].'停止邦保养服务,您可以'.$data['content'];
-		$this->smsCancel($data['sid'],$content);
+		$this->smsCancel($data['sid'],$data['content'],$data['company'],$data['reason']);
 		if($this->clearRation($data['sid']) == true){
 			Db::commit();
 			$this->result('',1,'操作成功，短信已发送给用户，请在审核通过列表，查看回收油详情');
@@ -205,11 +246,12 @@ class ShopCancel extends Agent
 	 * @param  [type] $content [description]
 	 * @return [type]          [description]
 	 */
-	public function smsCancel($sid,$content)
+	public function smsCancel($sid,$content,$company,$reason)
 	{	
+		$con=$company.'因'.$reason.'停止邦保养服务,您可以'.$content;
 		$user_data=$this->userCar($sid);
 		foreach ($user_data as $k => $v) {
-			$res=$this->smsVerify($v['phone'],$content);
+			$res=$this->smsVerify($v['phone'],$con);
 		}
 		if($res == "请求成功"){
 			return  true;
@@ -237,6 +279,7 @@ class ShopCancel extends Agent
 			return true;
 		}
 	}
+
 
 
 

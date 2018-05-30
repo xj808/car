@@ -13,13 +13,13 @@ class ShopRation extends Agent
 	 */
 	public function index()
 	{	
-		$page = input('post.page');
+		$page = input('post.page')? : 1;
 		$pageSize = 10;
 		$where=[['aid','=',$this->aid],['audit_status','=',2]];
 		$count = Db::table('cs_shop')->where($where)->count();
 		$rows = ceil($count / $pageSize);
 
-		$list=Db::table('cs_shop')->where($where)->select();
+		$list=Db::table('cs_shop')->where($where)->page($page,$pageSize)->select();
 		if($count > 0){                   
 			$this->result(['list'=>$list,'rows'=>$rows],1,'获取成功');
 		}else{
@@ -36,7 +36,6 @@ class ShopRation extends Agent
 		$sid=input('post.sid');
 		Db::startTrans();
 		// 运营商可开通修车厂名额减少一个，已开通修车厂名额增加一个
-		$this->open($this->aid);
 		// 运营商开通修车厂库存减少一组
 		$this->credit($this->aid);
 		// 记录修理厂提高配给

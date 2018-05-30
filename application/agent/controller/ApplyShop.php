@@ -153,6 +153,10 @@ class ApplyShop extends Agent
 		return ['list'=>$list,'detail'=>$detail['detail']];
 	}
 
+
+
+
+
 	/**
 	 * 物料申请确认操作
 	 * @return [type] 操作失败或成功
@@ -165,16 +169,29 @@ class ApplyShop extends Agent
 		Db::startTrans();
 		// 给修车厂发送短信
 		$this->applyCode($sid);
+		// 减少运营商库存
+		$this->incRation($sid,$this->aid);
 		//修车厂申请 状态改为已审核
-		$res = $this->status('ca_apply_materiel',$id,1);
+		$res = $this->status('cs_apply_materiel',$id,1);
 		if($res == true){
-			Db::commit();
-			$this->result('',1,'您已确认,请尽快发货');
+			// 修改修车厂物料申请审核时间
+			$result = Db::table('cs_apply_materiel')->where('id',$id)->setField('audit_time',time());
+			if($result !== false){
+
+				Db::commit();
+				$this->result('',1,'您已确认,请尽快发货');
+			}else{
+				Db::rollback();
+				$this->result('',0,'操作失败');
+			}
+			
 		}else{
 			Db::rollback();
 			$this->result('',0,'操作失败');
 		}
 	}
+
+
 
 	/**
 	 * 运营商申请延迟
@@ -200,9 +217,35 @@ class ApplyShop extends Agent
 	 */
 	private function applyCode($sid)
 	{
+		// 修改物料申请审核时间
+		// 给修车厂发送短信
 		$phone=Db::table('cs_shop')->where('id',$sid)->value('phone');
 		$content="您申请的货物已发出,请注意查收";
 		return $this->smsVerify($phone,$content);
+	}
+
+
+	/**
+	 * 减少运营商库存
+	 * @param  [type] $sid [description] 修车厂id
+	 * @param  [type] $aid [description] 运营商id
+	 * @return [type]      [description]
+	 */
+	public function incRation($id,$aid)
+	{
+		// 获取修车厂所申请的物料
+		$data = Db::table('cs_apply_materiel')->where('id',$id)->json(['detail'])->find();
+
+		foreach($data['detail'] as $k=>$v){
+			$res = Db::table('ca_ration')
+					->where(['materiel'=>$v['materiel_id'],'aid'=>$aid])
+					->dec('materiel_stock',$v['num'])
+					->update();
+		}
+		if($res !== false){
+			return  true;
+		}
+		
 	}
 
 

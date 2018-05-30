@@ -15,7 +15,8 @@ class ShopAudit extends Agent
 	 */
 	public function shopList()
 	{
-		return $this->sList(2);
+		$page = input('post.page') ? : 1;
+		return $this->sList(2,$page);
 	}
 
 
@@ -25,20 +26,33 @@ class ShopAudit extends Agent
 	 */
 	public function index()
 	{
-		return $this->sList(1);
+		$page = input('post.page') ? : 1;
+		return $this->sList(1,$page);
 	}
 
 	/**
 	 * 列表
 	 * @return [type] [description]
 	 */
-	public function sList($status)
+	public function sList($status,$page)
 	{
 		$where=[['aid','=',$this->aid],['audit_status','=',$status]];
-		return Db::table('cs_shop')
+		$count = Db::table('cs_shop')->where($where)->count();
+		$pageSize = 10;
+
+		$rows = ceil($count / $pageSize);
+		$list = Db::table('cs_shop')
 				->where($where)
 				->field('id,company,leader,phone,create_time,service_num')
+				->order('id desc')->page($page,$pageSize)
 				->select();
+
+		if($count > 0){
+			$this->result(['list'=>$list,'rows'=>$rows],1,'获取列表成功');
+		}else{
+
+			$this->result('',0,'暂无数据');
+		}
 	}
 
 
@@ -67,24 +81,34 @@ class ShopAudit extends Agent
 		$sid=input('post.sid');
 		Db::startTrans();
 		// 判断运营商的可开通数量
-		if(Db::table('ca_agent')->where('aid',$this->aid)->value('shop_nums') == 0){
+		if(Db::table('ca_agent')->where('aid',$this->aid)->value('shop_nums') <= 0){
 			Db::rollback();
 			$this->result('',0,'您可开通修理厂数量为0,请提高您的可开通修理厂数量');
 		}
-		// 运营商授信库存减少一组
-		$this->credit($this->aid);
-		// 运营商可开通修车厂名额减少一个，已开通修车厂数量增加一个
-		$this->open($this->aid);
-		// 修车厂配给库存增加
-		$this->shopRation($sid);
-		// 更改修理厂审核状态
-		if($this->status('cs_shop',$sid,2)==true){
-			Db::commit();
-			$this->result('',1,'操作成功');
+
+		// 运营商授信库存减少一组,可开通修车厂名额减少一个，已开通修车厂数量增加一个
+		if($this->credit($this->aid)){
+			// 修车厂配给库存增加
+			if($this->shopRation($sid)){
+				// 更改修理厂审核状态
+				if($this->status('cs_shop',$sid,2)==true){
+					Db::commit();
+					$this->result('',1,'操作成功');
+				}else{
+					Db::rollback();
+					$this->result('',0,'操作失败');
+				}
+			}else{
+				Db::rollback();
+				$this->result('',0,'修车厂库存修改失败');
+			}
+
 		}else{
 			Db::rollback();
-			$this->result('',0,'操作失败');
+			$this->result('',0,'运营商开通库存减少失败');
 		}
+		
+		
 	}
 
 
@@ -121,11 +145,14 @@ class ShopAudit extends Agent
 				'sid'=>$sid,
 				'materiel'=>$v['id'],
 				'ration'=>$v['def_num'],
-				'warning'=>$v['def_num'],
+				'warning'=>ceil($v['def_num']*20/100),
 				'stock'=>$v['def_num'],
 			];
 		}
-		Db::table('cs_ration')->insertAll($arr);
+		$res = Db::table('cs_ration')->insertAll($arr);
+		if($res){
+			return true;
+		}
 	}
 
 	

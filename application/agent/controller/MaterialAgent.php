@@ -31,6 +31,7 @@ class MaterialAgent extends Agent
 		}
 	}
 
+
 	/**
 	 * 运营商提高配给
 	 * @return [json] 成功或失败 	  
@@ -48,20 +49,6 @@ class MaterialAgent extends Agent
 		}
 	}
 
-	/**
-	 * 运营商需要补货的物料列表
-	 * @return [type] [description]
-	 */
-	public function applyIndex()
-	{
-		$data=$this->warning($this->aid);
-		$ar=$this->ifApply($data);
-		if(!empty($ar)){
-			$this->result($ar,1,'获取列表成功');
-		}else{
-			$this->result('',0,'没有数据');
-		}
-	}
 
 	/**
 	 * 运营商申请物料操作
@@ -85,38 +72,58 @@ class MaterialAgent extends Agent
 
 
 	/**
-	 * 获得运营商本身库存
+	 * 获得运营商需要补货的列表
 	 * @param  [type] $aid [运营商id]
 	 * @return [type]      [description]
 	 */
-	private function warning($aid)
+	public function applyIndex()
 	{
-		return Db::table('ca_ration cr')
+		$list = Db::table('ca_ration cr')
 				->join('co_bang_cate bc','cr.materiel=bc.id')
-				->where('aid',$aid)->select();
-	}
-
-	/**
-	 * 判断是否预警
-	 * @param  [type] $data [运营商本身库存的数组列表]
-	 * @return [type]       [description]
-	 */
-	private function ifApply($data)
-	{
-		foreach ($data as $k => $v) {
-			if($v['materiel_stock']/$v['warning']<=0.5){
+				->where('aid',$this->aid)
+				->where('materiel_stock < ration')
+				->select();
+		// 判断是否有需要预警的物料
+		if($this->ifWarning() == true){
+			// 获取运营商需要补货的物料种类，id,物料库存和需要补货的数量
+			foreach($list as $k=>$v){
 				$arr=[
 					'materiel'=>$v['name'],
 					'materiel_stock'=>$v['materiel_stock'],
 					'apply'=>$v['ration']-$v['materiel_stock'],
 					'materiel_id'=>$v['id']
 				];
-				$ar[]=$arr;
-			}else{
-				$ar[]='';
+				$data[]=$arr;
 			}
+
+			$this->result($data,1,'获取补货列表成功');
+
+		}else{
+
+			$this->result('',0,'暂无数据');
 		}
-		return $ar;
+	}
+
+
+	/**
+	 * 判断是否预警
+	 * @param  [type] $data [运营商本身库存的数组列表]
+	 * @return [type]       [description]
+	 */
+	public function ifWarning()
+	{
+		$count = Db::table('ca_ration')
+				->where('aid',$this->aid)
+				->where('warning > materiel_stock')
+				->where('materiel_stock < ration')
+				->count();
+
+		if($count > 0 ){
+			return true;
+		}else{
+			return false;
+
+		}
 	}
 
 	/**

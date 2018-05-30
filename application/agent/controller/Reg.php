@@ -81,6 +81,18 @@ class Reg extends Base{
 		$id = input('post.id');
 		return $this->county($id);
 	}
+
+
+
+
+	/**
+	 * 注册页面的图片上传
+	 * @return [type] [description]图片路径
+	 */
+	public function regImg()
+	{
+		return upload('image','agent','http://192.168.1.110/car/public');
+	}
 	
 	
 }

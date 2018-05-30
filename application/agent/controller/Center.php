@@ -103,6 +103,9 @@ class Center extends Agent{
 		}
 	}
 
+
+
+
 	/**
 	 * 查看运营商所供应地区
 	 * @return 返回地区名称
@@ -257,6 +260,9 @@ class Center extends Agent{
 		return $list;
 	}
 	
+
+
+
 	/**
 	 * 运营商供应地区树形结构
 	 * @return 城市地区id
@@ -266,6 +272,9 @@ class Center extends Agent{
 		$city=Db::table($this->china)->whereIn('id',$city)->select();
 		return array_str($city,'pid');
 	}
+
+
+
 
 	/**
 	 * 修改shop表状态为2
