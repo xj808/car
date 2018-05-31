@@ -60,7 +60,7 @@ class Index extends Agent
 	public function unread()
 	{	
 		$page = input('post.page') ? : 1;
-		$list=$this->coMsg->msgLists($this->msg,$this->aid,0);
+		$list=$this->coMsg->msgLists($this->msg,$this->aid,0,$page);
 		if(!$list){
 			$this->result($list,1,'获取未读消息列表成功');
 		}else{
@@ -76,7 +76,7 @@ class Index extends Agent
 	public function read()
 	{
 		$page = input('post.page') ? : 1;
-		$list=$this->coMsg->msgLists($this->msg,$this->aid,1);
+		$list=$this->coMsg->msgLists($this->msg,$this->aid,1,$page);
 		if($list){
 			$this->result($list,1,'获取已读消息列表成功');
 		}else{

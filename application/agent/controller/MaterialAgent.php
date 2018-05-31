@@ -119,6 +119,7 @@ class MaterialAgent extends Agent
 				->count();
 
 		if($count > 0 ){
+			
 			return true;
 		}else{
 			return false;

@@ -9,7 +9,7 @@ class Reg extends Validate
       'login|登录账号'  	=> 'require|unique:ca_agent',
       'pass|密码'   	    => 'require',
       'qpass|确认密码'  	=> 'require|confirm:pass',
-      'compay|公司名称' 	=> 'require',
+      'company|公司名称' 	=> 'require',
       'province|省份'     => 'require',
       'city|市'	          => 'require',
       'county|区县'	      => 'require',

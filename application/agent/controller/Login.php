@@ -72,7 +72,7 @@ class Login extends Base
         $key=create_key();   //
         $token=['id'=>$uid,'login'=>$login];
         $JWT=JWT::encode($token,$key);
-        JWT::$leeway = 60;
+        JWT::$leeway =10;
         return $JWT;
     }
 
