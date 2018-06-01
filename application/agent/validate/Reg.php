@@ -15,7 +15,7 @@ class Reg extends Validate
       'county|区县'	      => 'require',
       'address|详细地址'	=> 'require',
       'leader|负责人'	    => 'require',
-      'bank|开户行'	      => 'require',
+      'bank|开户行'	      => 'require|length:4|number',
       'branch|开户分行'	  => 'require',
       'bank_name|开户名'  => 'require',
       'account|提款账号'	=> 'require|number',

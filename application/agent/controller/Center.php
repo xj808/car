@@ -95,7 +95,7 @@ class Center extends Agent{
 
 		$license=input('post.license');
 
-		$res=Db::table($this->agent)->where('aid',$this->aid)->setField('license',$license);
+		$res=Db::table($this->agent)->where('aid',$this->aid)->save(['license'=>$license,'status'=>1]);
 		if($res){
 			$this->result('',1,'上传营业执照成功');
 		}else{
@@ -252,10 +252,9 @@ class Center extends Agent{
 	 * @return 运营商详细信息
 	 */
 	private function alist($aid){
-		$list=Db::table('ca_agent a')
-			->leftJoin('ca_increase ci','a.aid=ci.aid')	
-			->where('a.aid',$aid)
-			->field('a.aid,login,company,account,leader,province,city,county,address,phone,open_shop,license,voucher')
+		$list=Db::table('ca_agent')
+			->where('aid',$aid)
+			->field('aid,login,company,account,leader,province,city,county,address,phone,open_shop,license,usecost')
 			->find();
 		return $list;
 	}
@@ -285,6 +284,27 @@ class Center extends Agent{
 		$res=Db::table($this->agent)->where('aid',$aid)->setField('status',2);
 		if($res){
 			return true;
+		}
+	}
+
+
+	/**
+	 * 判断营业执照是否上传您是否已审核
+	 * @return [type] [description]
+	 */
+	public function ifLicense()
+	{
+		$license = Db::table('ca_agent')->where('aid',$this->aid)->value('license');
+		if(empty($license)){
+			// 查看营业执照和系统使用费是否审核通过
+			$status = Db::table('ca_agent')->where('aid',$this->aid)->value('status');
+			if($status == 2){
+				$this->result('',1,'已通过审核');
+			}else{
+				$this->result('',2,'请等待总后台审核');
+			}
+		}else{
+			$this->result('',0,'您还没有上传营业执照');
 		}
 	}
 
