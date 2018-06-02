@@ -111,7 +111,7 @@ class Base extends Controller{
      * @param  [type] $content [短信发送内容]
      * @return [type]          [发送成功或失败]
      */
-    public function smsVerify($phone,$content,$code)
+    public function smsVerify($phone,$content,$code = '')
     {
         return $this->sms->send_code($phone,$content,$code);
     }
@@ -121,14 +121,23 @@ class Base extends Controller{
      * 修改密码发送手机验证码
      * @return [type] [发送成功或失败]
      */
-    public function forCode()
+    public function forCode($phone)
     {
-        $phone=input('post.phone');
         // 生成四位验证码
         $code=$this->apiVerify();
         $content="您的短信验证码是：【".$code."】。您正在通过手机号重置登录密码，如非本人操作，请忽略该短信。";
        return  $this->smsVerify($phone,$content,$code);
 
+    }
+
+
+    /**
+     * 获取每组油的升数
+     * @return 数组
+     */
+    public function bangCate()
+    {   $where=[['pid','>','0'],['def_num','>',0]];
+        return Db::table('co_bang_cate')->where($where)->field('id,def_num')->select();
     }
 
     

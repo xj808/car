@@ -18,14 +18,20 @@ class Agent extends Base
         $this->aid=$this->ifToken();
     }
 
+
+    
+
     /**
      * 上传图片的方法
      * @return [type] [description]
      */
     public function images()
     {           
-        return upload('image','agent');
+        return upload('image','agent','http://192.168.1.110/car/public');
     }
+
+
+
 
 	/**
 	 * 上传支付凭证,总金额
@@ -40,13 +46,26 @@ class Agent extends Base
 			'aid'=>$aid,
 		];
 		if($data){
-			$res=Db::table('ca_increase')->insert($data);
-			if($res){
-				return true;
+			$count=Db::table('ca_increase')->where('aid',$aid)->count();
+
+			if($count > 0){
+				
+				$res=Db::table('ca_increase')->where('aid',$aid)->update($data);
+				if($res!==false){
+					return true;
+				}
+
+			}else{
+				$res=Db::table('ca_increase')->insert($data);
+				if($res){
+					return true;
+				}
 			}
+			
 		}
 		
 	}
+	
 
 	/**
 	 * 修改状态
@@ -75,35 +94,22 @@ class Agent extends Base
 		$arr=$this->bangCate();
 		foreach ($arr as $k => $v) {
 			$where=[['aid','=',$aid],['materiel','=',$v['id']]];
-			Db::table('ca_ration')->where($where)->dec('open_stock',$v['def_num'])->update();
+			$res = Db::table('ca_ration')->where($where)->dec('open_stock',$v['def_num'])->update();
+		}
+		
+		// 减少运营商可开通数量，增加已开通修车厂数量
+		if($res !== false){
+			$result = Db::table('ca_agent')
+					->where('aid',$aid)
+					->dec('shop_nums')->inc('open_shop')
+					->update();
+			if($result !== false){
+				return true;
+			}
 		}
 
 	}
 
-	/**
-	 * 获取每组油的升数
-	 * @return 数组
-	 */
-	public function bangCate()
-	{	$where=[['pid','>','0'],['def_num','>',0]];
-		return Db::table('co_bang_cate')->where($where)->field('id,def_num')->select();
-	}
-
-
-	/**
-	 *减少运营商可开通数量，增加已开通修车厂数量
-	 * @param  [type] $aid 运营商id
-	 * @return [type]      [description]
-	 */
-	public function open($aid)
-	{
-		Db::table('ca_agent_set')
-			->where('aid',$aid)
-			->dec('shop_nums')
-			->inc('open_shop')
-			->update();
-		
-	}
 
 
 	/**
