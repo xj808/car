@@ -51,7 +51,7 @@ class Capital extends Agent
 					->join('u_user uu','ci.uid=uu.id')
 					->field('odd_number,cs.phone,amount,ci.create_time,company,name')
 					->where('ci.id',$id)
-				   ->paginate(10);
+				   ->select();
 	}
 
 

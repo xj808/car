@@ -55,7 +55,8 @@ class ShopCancel extends Agent
 	 */
 	public function auditIndex()
 	{
-		return $this->auditStatus(1);
+		$page = input('post.page');
+		return $this->auditStatus(1,$page);
 	}
 
 
@@ -65,7 +66,8 @@ class ShopCancel extends Agent
 	 */
 	public function index()
 	{
-		return $this->auditStatus(0);
+		$page = input('post.page');
+		return $this->auditStatus(0,$page);
 	}
 
 
@@ -74,10 +76,21 @@ class ShopCancel extends Agent
 	 * 修车厂取消合作申请列表
 	 * @return [type] [description]
 	 */
-	public function auditStatus($status)
+	public function auditStatus($status,$page)
 	{
-		
-		return Db::table('cs_apply_cancel')->where(['aid'=>$this->aid,'audit_status'=>$status])->field('id,sid,company,leader,reason,form,create_time')->select();
+		$pageSize = 10;
+		$count = Db::table('cs_apply_cancel')->where(['aid'=>$this->aid,'audit_status'=>$status])->count();
+		$rows = ceil($count / $pageSize);
+		$list = Db::table('cs_apply_cancel cac')
+			->join('cs_shop cs','cs.id=cac.sid')
+			->where(['cac.aid'=>$this->aid,'cac.audit_status'=>$status])
+			->field('cac.id,cac.sid,cac.company,cac.leader,phone,service_num,cac.reason,cac.create_time')
+			->order('id desc')->page($page,$pageSize)->select();
+		if($count > 0){
+			$this->result(['list'=>$list,'rows'=>$rows],1,'获取成功');
+		}else{
+			$this->result('',0,'暂无数据');
+		}
 	}
 
 
