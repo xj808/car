@@ -77,6 +77,19 @@ class Login extends Base
     }
 
 
+
+    /**
+     * 登录的修改密码短信验证码
+     * @var string
+     */
+    public function loginFor()
+    {
+        $phone=input('post.phone');
+        return $this->forCode($phone);
+    }
+    
+
+
     
 
 }

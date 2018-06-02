@@ -95,7 +95,7 @@ class Center extends Agent{
 
 		$license=input('post.license');
 
-		$res=Db::table($this->agent)->where('aid',$this->aid)->save(['license'=>$license,'status'=>1]);
+		$res=Db::table($this->agent)->where('aid',$this->aid)->update(['license'=>$license,'status'=>1]);
 		if($res){
 			$this->result('',1,'上传营业执照成功');
 		}else{
@@ -307,6 +307,18 @@ class Center extends Agent{
 			$this->result('',0,'您还没有上传营业执照');
 		}
 	}
+
+
+
+	 /**
+     * 登录的修改密码短信验证码
+     * @var string
+     */
+    public function cenFor()
+    {
+        $phone=input('post.phone');
+        return $this->forCode($phone);
+    }
 
 	
 	

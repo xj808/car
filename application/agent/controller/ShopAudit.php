@@ -155,6 +155,16 @@ class ShopAudit extends Agent
 		}
 	}
 
+
+	//修车厂申请物料修改over时间
+	// public function a()
+	// {
+	// 	$crea = Db::table('cs_apply_materiel')->where('id',5)->value('create_time');
+	// 	$crea = strtotime($crea);
+	// 	Db::table('cs_apply_materiel')->where('id',5)->setField('over_time',$crea+259200);
+
+	// }
+
 	
 
 
