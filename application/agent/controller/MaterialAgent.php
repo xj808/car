@@ -32,23 +32,6 @@ class MaterialAgent extends Agent
 	}
 
 
-	/**
-	 * 运营商提高配给
-	 * @return [json] 成功或失败 	  
-	 */
-	public function incRation()
-	{
-		$data=input('post.');
-
-		$res=$this->upLicense($data['voucher'],$data['price'],$this->aid);
-		
-		if($res){
-			$this->result('',1,'提高配给申请成功');
-		}else{
-			$this->result('',1,'提高配给申请失败');
-		}
-	}
-
 
 	/**
 	 * 运营商申请物料操作

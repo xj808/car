@@ -17,6 +17,92 @@ class Center extends Agent{
 		$this->china='co_china_data';
 		
 	}
+
+
+	/**
+	 * 未审核列表
+	 * @return [type] [description]
+	 */
+	public function notList()
+	{
+		$this->ration(0);
+	}
+
+	/**
+	 * 配给成功列表
+	 * @return [type] [description]
+	 */
+	public function ratAdopt()
+	{
+		$this->ration(1);
+	}
+
+
+
+	/**
+	 * 配给驳回列表
+	 * @return [type] [description]
+	 */
+	public function rejList()
+	{
+		$this->ration(2);
+	}
+
+
+	/**
+	 * 配给列表操作
+	 * @param  [type] $status [description]
+	 * @return [type]         [description]
+	 */
+	private function ration($status)
+	{	
+		$page =input('post.page')? : 1;
+		$pageSize = 10;
+		$count = Db::table('ca_increase')->where('audit_status',$status)->count();
+		$rows = ceil($count / $pageSize);
+		$list = Db::table('ca_increase')->where('audit_status',$status)->select();
+		if($list){
+			$this->result(['list'=>$list,'rows'=>$rows],1,'获取列表成功');
+		}else{
+			$this->result('',0,'获取列表失败');
+		}
+	}
+
+
+	/**
+	 * 驳回点击修改操作
+	 * @return [type] [description]
+	 */
+	public function rejMod()
+	{
+		// 获取该提高配给的订单id
+		$data = input('post.');
+		foreach ($data['county'] as $k => $v) {
+			$area[]=['area'=>$v,'aid'=>$this->aid];// 获取运营商所选择的区域
+		}
+		Db::startTrans();
+		$res=Db::table($this->area)->insertAll($area);
+		if($res){
+			$ar = array_str($area,'area');
+			//填写总金额，上传支付凭证
+			$vo=$this->upLicense($ar,$data['voucher'],$data['deposit'],$data['aid'],$data['id']);
+			if($vo==true){
+				Db::commit();
+				$this->result('',1,'设置成功');
+			}else{
+				Db::rollback();
+				$this->result('',0,'设置失败');
+			}
+
+		}else{
+			Db::rollback();
+			$this->result('',0,'设置失败');
+		}
+
+	}
+
+
+
 	
 	/**
 	 * 个人中心首页
@@ -41,17 +127,17 @@ class Center extends Agent{
 	 * @return [type]
 	 */
 	public function setArea(){
+
 		$data = input('post.');
 		foreach ($data['county'] as $k => $v) {
 			$area[]=['area'=>$v,'aid'=>$this->aid];// 获取运营商所选择的区域
 		}
 		Db::startTrans();
-		Db::table($this->area)->where('aid',$this->aid)->delete();
 		$res=Db::table($this->area)->insertAll($area);
 		if($res){
-			
+			$ar = array_str($area,'area');
 			//填写总金额，上传支付凭证
-			$vo=$this->upLicense($data['voucher'],$data['deposit'],$this->aid);
+			$vo=$this->upLicense($ar,$data['voucher'],$data['deposit'],$this->aid);
 			if($vo==true){
 				Db::commit();
 				$this->result('',1,'设置成功');
