@@ -140,6 +140,22 @@ class Base extends Controller{
         return Db::table('co_bang_cate')->where($where)->field('id,def_num')->select();
     }
 
+
+    /**
+     * 修改状态
+     * @param  [type] $table   要修改的表
+     * @param  [type] $sid     要修改的id
+     * @param  [type] $status  要修改的状态值
+     * @return [type]         [description]
+     */
+    public function status($table,$id,$status)
+    {
+        $res=Db::table($table)->where('id',$id)->setField('audit_status',$status);
+        if($res!==false){
+            return true;
+        }
+    }
+
     
 
 }

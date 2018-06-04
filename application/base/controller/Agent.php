@@ -37,50 +37,37 @@ class Agent extends Base
 	 * 上传支付凭证,总金额
 	 * @return 布尔
 	 */
-	public function upLicense($voucher,$deposit,$aid){
+	public function upLicense($area,$voucher,$deposit,$aid,$id = ''){
 		// 填写可开通运营商数量
 		// 押金总额
 		$data=[
+			'area'=>$area,
 			'voucher'=>$voucher,
 			'price'=>$deposit,
-			'aid'=>$aid,
+			'aid'=>$aid
 		];
 		if($data){
-			$count=Db::table('ca_increase')->where('aid',$aid)->count();
+			if($id == ''){
+				$res=Db::table('ca_increase')->insert($data);
 
-			if($count > 0){
-				
-				$res=Db::table('ca_increase')->where('aid',$aid)->update($data);
-				if($res!==false){
+				if($res){
 					return true;
 				}
-
 			}else{
-				$res=Db::table('ca_increase')->insert($data);
+				$res=Db::table('ca_increase')->where(['id'=>$id,'aid'=>$aid])->update($data);
+
 				if($res){
 					return true;
 				}
 			}
+				
 			
 		}
 		
 	}
 	
 
-	/**
-	 * 修改状态
-	 * @param  [type] $table   要修改的表
-	 * @param  [type] $sid     要修改的id
-	 * @param  [type] $status  要修改的状态值
-	 * @return [type]         [description]
-	 */
-	public function status($table,$id,$status)
-	{
-		$res=Db::table($table)->where('id',$id)->setField('audit_status',$status);
-		if($res!==false){
-			return true;
-		}
-	}
+	
 
 
 	/**

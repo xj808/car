@@ -15,7 +15,7 @@ class Admin extends Base
     function initialize()
     {   
     	parent::initialize();
-        $this->aid=$this->ifToken();
+        $this->admin_id=$this->ifToken();
     }
 
 
