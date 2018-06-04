@@ -113,6 +113,36 @@ class AgentIncRation extends Admin
 
 
 		/**
+		 * 配给驳回操作
+		 * @return [type] [description]
+		 */
+		public function rejec()
+		{	
+			// 获取驳回理由、获取运营商id、获取订单id
+			$data = input('post.');
+			// 删除运营商所选地区
+			$area = $this->delArea($data['id'],$data['aid']);
+			$res = Db::table('ca_area')->whereIn('area',$area)->delete();
+			if($res){
+
+				$result = Db::table('ca_increase')->where('id',$data['id'])->setField('audit_status',2);
+
+				if($result !== false){
+					Db::commit();
+					$this->result('',1,'操作成功');
+				}else{
+					Db::rollback();
+					$this->result('',0,'操作失败');
+				}
+			}else{
+				Db::rollback();
+				$this->result('',0,'删除失败');
+			}
+		}
+
+
+
+		/**
 		 * 运营商提高配给列表
 		 * @param  [type] $status [description]
 		 * @return [type]         [description]
@@ -139,13 +169,15 @@ class AgentIncRation extends Admin
 		}
 
 
+
+
 		/**
 		 * 增加运营商的库存
 		 * @param  [type] $aid    [description]
 		 * @param  [type] $region [description]
 		 * @return [type]         [description]
 		 */
-		public function agentRation($id,$aid,$region)
+		private function agentRation($id,$aid,$region)
 		{
 			$count = Db::table('ca_ration')->where('aid',$aid)->count();
 			// 判断是第一次配给还是提高配给
@@ -162,7 +194,7 @@ class AgentIncRation extends Admin
 
 			}else{
 
-				// 如果小于等于0则表示第一次配给想运营商库存插入数据 
+				// 如果小于等于0则表示第一次配给运营商库存插入数据 
 				$arr = $this->firstData($aid,$region);
 				$res = Db::table('ca_ration')->insertAll($arr);
 			}
@@ -180,7 +212,7 @@ class AgentIncRation extends Admin
 		 * 第一次配给所用数组
 		 * @return [type] [description]
 		 */
-		public function firstData($aid,$region)
+		private function firstData($aid,$region)
 		{
 			foreach ($this->bangCate() as $k => $v) {
 					$arr[]=[
@@ -201,7 +233,7 @@ class AgentIncRation extends Admin
 		 * 提高配给所用数组
 		 * @return [type] [description]
 		 */
-		public function IncData($region)
+		private function IncData($region)
 		{
 			foreach ($this->bangCate() as $k => $v) {
 					$arr[]=[
@@ -213,6 +245,26 @@ class AgentIncRation extends Admin
 					];
 			}
 			return $arr;
+
+		}
+
+
+		/**
+		 * 获取运营商所选择的区域
+		 * @param  [type] $id  [description]
+		 * @param  [type] $aid [description]
+		 * @return [type]      [description]
+		 */
+		private function delArea($id,$aid)
+		{	
+			// 查询运营商选择配给时的地区
+			$area = Db::table('ca_increase')->where('id',$id)->value('area');
+			$area = explode(',',$area);
+			// 查询该运营商地区表里有没有这次选择的地区，有删除，没有返回true;
+			$area_id = Db::table('ca_area')->where('aid',$aid)->column('area');
+			// 比较两个数组的值获取想的值
+			$are = array_intersect($area,$area_id);
+			return $are;
 
 		}
 
