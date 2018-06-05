@@ -3,7 +3,7 @@ namespace app\shop\controller;
 use app\base\controller\Shop;
 use think\Db;
 use think\File;
-use msg\Sms;
+use Msg\Sms;
 /**
 * 个人中心
 */
@@ -15,7 +15,19 @@ class Main extends Shop
 	public function initialize()
 	{
 		parent::initialize();
-		$this->Sms = new Sms();
+	}
+
+	/**
+	 * 物料预警
+	 */
+	public function mateTips()
+	{
+		$count = $this->mateCount();
+		if($count > 0){
+			$this->result('',0,'有物料库存不足，请及时补充');
+		}else{
+			$this->result('',1,'物料库存充足');
+		}
 	}
 
 	/**
@@ -128,7 +140,7 @@ class Main extends Shop
 		// 获取用户手机号码
 		$mobile = $this->getMobile();
 		// 验证码短信验证码
-		$check = $this->Sms->compare($mobile,$data['code']);
+		$check = $this->sms->compare($mobile,$data['code']);
 		if($check !== false){
 			$res = 	Db::table('cs_shop_set')
 					->where('id',$this->sid)
@@ -196,7 +208,7 @@ class Main extends Shop
 	 */
 	public function uploadImg()
 	{
-		return upload('file','shop','http://192.168.1.120');
+		return upload('file','shop/photo','http://192.168.1.120/tp5/public');
 	}
 
 	/**
@@ -209,7 +221,7 @@ class Main extends Shop
 		// 获取用户手机号码
 		$mobile = $this->getMobile();
 		// 验证码短信验证码
-		$check = $this->Sms->compare($mobile,$data['code']);
+		$check = $this->sms->compare($mobile,$data['code']);
 		if($check !== false){
 			// 获取原密码
 			$op = DB::table('cs_shop')->where('id',$this->sid)->value('passwd');
@@ -241,7 +253,7 @@ class Main extends Shop
 	public function abolish()
 	{
 		// 获取取消合作理由
-		$reason = input('poist.reason')
+		$reason = input('poist.reason');
 		// 获取代理商
 		$info = Db::table('cs_shop')->where('id',$this->sid)->field('aid,company,leader')->find();
 		if(strlen(trim($reason)) < 2){
@@ -312,7 +324,7 @@ class Main extends Shop
 		$mobile = $this->getMobile();
 		$code = $this->apiVerify();
 		$content = "您的短信验证码是【{$code}】。您正在通过手机号重置登录密码，如非本人操作，请忽略该短信。";
-		return $this->Sms->send_code($mobile,$content,$code);
+		return $this->sms->send_code($mobile,$content,$code);
 	}
 
 	/**
@@ -323,7 +335,7 @@ class Main extends Shop
 		$mobile = $this->getMobile();
 		$code = $this->apiVerify();
 		$content = "您的短信验证码是【{$code}】。您正在通过手机号修改银行账户号，如非本人操作，请忽略该短信。";
-		return $this->Sms->send_code($mobile,$content,$code);
+		return $this->sms->send_code($mobile,$content,$code);
 	}
 	
 }

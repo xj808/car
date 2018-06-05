@@ -28,13 +28,13 @@ class Msg
 	 */
 	public function msgList($table,$uid,$page)
 	{	
-		$pageSize = 10;
+		$pageSize = 1;
 		$count = Db::table($table)->where('uid',$uid)->count();
 		$rows = ceil($count / $pageSize);
 		$list = Db::table($table)
 				->alias('um')
 				->join(['am_msg'=>'am'],'um.mid = am.id')
-				->field('mid,status,title,content,create_time')
+				->field('mid,status,title,create_time')
 				->where('uid',$uid)
 				->order('um.mid desc')
 				->page($page,$pageSize)->select();
@@ -47,7 +47,7 @@ class Msg
 	 */
 	public function msgLists($table,$uid,$status,$page)
 	{	
-		$pageSize = 10;
+		$pageSize = 1;
 		$count = Db::table($table)->where('uid',$uid)->count();
 		$rows = ceil($count / $pageSize);
 		$where=[['uid','=',$uid],['status','=',$status]];
@@ -95,8 +95,10 @@ class Msg
 		Db::table($table)->where(['mid'=>$mid,'uid'=>$uid])->setField('status',1);
 		// 返回消息详情
 		return Db::table('am_msg')
+			->field('title,content,create_time')
 			->where('id','=',$mid)
-			->where('sendto','like','%'.$rid)->find();
+			->where('sendto','like','%'.$rid.'%')
+			->find();
 	}
 
 

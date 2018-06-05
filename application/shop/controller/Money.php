@@ -2,7 +2,7 @@
 namespace app\shop\controller;
 use app\base\controller\Shop;
 use think\Db;
-use msg\Sms;
+use Msg\Sms;
 /**
 * 资金管理
 */
@@ -15,7 +15,6 @@ class Money extends Shop
 	public function initialize()
 	{
 		parent::initialize();
-		$this->Sms = new Sms();
 	}
 
 	/**
@@ -73,7 +72,7 @@ class Money extends Shop
 	{
 		$data = input('post.');
 		// 进行短信验证码验证
-		$check = $this->Sms->compare($data['mobile'],$data['code']);
+		$check = $this->sms->compare($data['mobile'],$data['code']);
 		// 获取账户信息
 		$info = Db::table('cs_shop_set')->field('bank,account,account_name')->where('sid',$this->sid)->find();
 		if($check !== false){
@@ -152,6 +151,7 @@ class Money extends Shop
 		$mobile = $this->getMobile();
 		$code = $this->apiVerify();
 		$content = "您本次提现的验证码是【{$code}】，请不要泄露个任何人。";
-		return $this->Sms->send_code($mobile,$content,$code);
+		$res = $this->sms->send_code($mobile,$content,$code);
+		$this->result('',1,$res);
 	}
 }

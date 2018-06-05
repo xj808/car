@@ -3,18 +3,19 @@
 * 汽修厂注册
 */
 namespace app\shop\controller;
-use think\Controller;
+use app\base\controller\Shop;
 use think\Db;
-use msg\Sms;
+use Msg\Sms;
 
-class Reg extends controller
+class Reg extends Shop
 {
 	/**
 	 * 进程初始化
 	 */
 	public function initialize()
 	{
-		$this->Sms = new Sms();
+		$this->sms = new Sms();
+		header("Access-Control-Allow-Origin: *");
 	}
 
 	/**
@@ -28,9 +29,8 @@ class Reg extends controller
 		$validate = validate('Reg');
 		// 如果验证通过则进行邦保养操作
 		if($validate->check($data)){
-			
 			// 检测手机验证码是否正确
-			$check = $this->Sms->compare($data['phone'],$data['code']);
+			$check = $this->sms->compare($data['phone'],$data['code']);
 			if($check !== false){
 				// 密码加密
 				$data['passwd']=get_encrypt($data['passwd']);
@@ -59,7 +59,7 @@ class Reg extends controller
 		$mobile = input('post.mobile');
 		$code = $this->apiVerify();
 		$content="您的验证码是：【{$code}】。请不要把验证码泄露给其他人。";
-		$res = $this->Sms->send_code($mobile,$content,$code);
+		$res = $this->sms->send_code($mobile,$content,$code);
 		$this->result('',1,$res);
 	}
 }

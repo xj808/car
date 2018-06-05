@@ -37,17 +37,24 @@ class ShopRation extends Agent
 		Db::startTrans();
 		// 运营商可开通修车厂名额减少一个，已开通修车厂名额增加一个
 		// 运营商开通修车厂库存减少一组
-		$this->credit($this->aid);
-		// 记录修理厂提高配给
-		$this->recordRation($sid,$this->aid);
-		// 增加修车厂配给和库存量
-		$res=$this->addRation($sid);
-		if($res==true){
-			Db::commit();
-			$this->result('',1,'操作成功');
+		if($this->credit($this->aid) == true){
+			// 记录修车厂提高配给
+			if($this->recordRation($sid,$this->aid) == true){
+				// 增加修车厂配给和库存量
+				if($this->addRation($sid)==true){
+					Db::commit();
+					$this->result('',1,'操作成功');
+				}else{
+					Db::rollback();
+					$this->result('',0,'操作失败');
+				}
+			}else{
+				Db::rollback();
+				$this->result('',0,'记录修车厂提高配给失败');
+			}
 		}else{
 			Db::rollback();
-			$this->result('',0,'操作失败');
+			$this->result('',0,'运营商减少库存失败');
 		}
 
 	}
@@ -60,16 +67,11 @@ class ShopRation extends Agent
 	 */
 	public function recordRation($sid,$aid)
 	{
-		foreach ($this->bangCate() as $k => $v) {
-			$arr['sid']=$sid;
-			$arr['aid']=$aid;
-			$arr['record']=[
-				'materiel'=>$v['id'],
-				'ration_num'=>$v['def_num'],
-			];
-			$data[]=$arr;
+			$arr=['sid'=>$sid,'aid'=>$aid];
+		$res=Db::table('cs_increase')->json(['record'])->insert($arr);
+		if($res){
+			return true;
 		}
-		$res=Db::table('cs_increase')->json(['record'])->insertAll($data);
 	}
 
 

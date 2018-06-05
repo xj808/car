@@ -109,6 +109,11 @@ class Base extends Controller{
         $content="您的短信验证码是：【".$code."】。您正在通过手机号重置登录密码，如非本人操作，请忽略该短信。";
        return  $this->smsVerify($phone,$content,$code);
     }
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> origin/dev
     /**
      * 获取每组油的升数
      * @return 数组
@@ -117,6 +122,11 @@ class Base extends Controller{
     {   $where=[['pid','>','0'],['def_num','>',0]];
         return Db::table('co_bang_cate')->where($where)->field('id,def_num')->select();
     }
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> origin/dev
     /**
      * 修改状态
      * @param  [type] $table   要修改的表
@@ -131,5 +141,9 @@ class Base extends Controller{
             return true;
         }
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/dev
     
 }

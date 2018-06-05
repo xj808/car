@@ -170,7 +170,7 @@ class ApplyShop extends Agent
 		// 给修车厂发送短信
 		$this->applyCode($sid);
 		// 减少运营商库存
-		$this->incRation($sid,$this->aid);
+		$this->incRation($id,$this->aid);
 		//修车厂申请 状态改为已审核
 		$res = $this->status('cs_apply_materiel',$id,1);
 		if($res == true){
@@ -235,7 +235,6 @@ class ApplyShop extends Agent
 	{
 		// 获取修车厂所申请的物料
 		$data = Db::table('cs_apply_materiel')->where('id',$id)->json(['detail'])->find();
-
 		foreach($data['detail'] as $k=>$v){
 			$res = Db::table('ca_ration')
 					->where(['materiel'=>$v['materiel_id'],'aid'=>$aid])

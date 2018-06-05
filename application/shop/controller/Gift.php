@@ -52,25 +52,13 @@ class Gift extends Shop
 		// 检测兑换码是否有效
 		$res = $this->checkExCode($this->sid,$excode);
 		// 如果是店铺提供的服务
-		switch ($res['gcate']) {
-			// 兑换系统提供的赠品
-			case 1:
-				// 判断库存是否充足
-				$this->checkRation($this->sid,$res['gid']);
-				$data = '豪华大礼包';
-				break;
-			// 兑换超级VIP
-			case 2:
-				// 判断库存是否充足
-				$this->checkRation($this->sid,$res['gid']);
-				$data = 'OBD车服管家';
-				break;
-			// 兑换店铺提供的服务
-			case 3:
-				$data = Db::table('cs_service')->where('sid',$this->sid)->where('id',$res['gid'])->value('service');
-				break;
+		$gift = Db::table('cs_gift')->where('excode',$excode)->value('gift_name');
+		if($gift){
+			$this->result($gift,1,'获取数据成功');
+		}else{
+			$this->result('',0,'获取赠品信息失败');
 		}
-		$this->result($data,1,'获取数据成功');
+		
 		
 	}
 
@@ -118,8 +106,8 @@ class Gift extends Shop
 	 */
 	public function income()
 	{
-		Db::table('cs_ex_income')->order('id desc')->select();
-		
+		// Db::table('cs_ex_income')->order('id desc')->select();
+		$this->result('',0,'暂无数据');
 	}
 
 	/**

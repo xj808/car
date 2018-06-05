@@ -55,7 +55,8 @@ class ShopCancel extends Agent
 	 */
 	public function auditIndex()
 	{
-		return $this->auditStatus(1);
+		$page = input('post.page');
+		return $this->auditStatus(1,$page);
 	}
 
 
@@ -65,7 +66,8 @@ class ShopCancel extends Agent
 	 */
 	public function index()
 	{
-		return $this->auditStatus(0);
+		$page = input('post.page');
+		return $this->auditStatus(0,$page);
 	}
 
 
@@ -74,10 +76,21 @@ class ShopCancel extends Agent
 	 * 修车厂取消合作申请列表
 	 * @return [type] [description]
 	 */
-	public function auditStatus($status)
+	public function auditStatus($status,$page)
 	{
-		
-		return Db::table('cs_apply_cancel')->where(['aid'=>$this->aid,'audit_status'=>$status])->field('id,sid,company,leader,reason,form,create_time')->select();
+		$pageSize = 10;
+		$count = Db::table('cs_apply_cancel')->where(['aid'=>$this->aid])->count();
+		$rows = ceil($count / $pageSize);
+		$list = Db::table('cs_apply_cancel cac')
+			->join('cs_shop cs','cs.id=cac.sid')
+			->where(['cac.aid'=>$this->aid,'cac.audit_status'=>$status])
+			->field('cac.id,cac.sid,cac.company,cac.leader,phone,service_num,cac.reason,cac.create_time')
+			->order('id desc')->page($page,$pageSize)->select();
+		if($count > 0){
+			$this->result(['list'=>$list,'rows'=>$rows],1,'获取成功');
+		}else{
+			$this->result('',0,'暂无数据');
+		}
 	}
 
 
@@ -93,23 +106,54 @@ class ShopCancel extends Agent
 		Db::startTrans();
 		// 获取修车厂名称、取消合作原因、
 		$data=input('post.');
-		// 修改修车厂审核状态shop表
-		$this->setStatus($data['sid']);
-		// 增加运营商库存
-		$this->agentMateriel($data['sid'],$this->aid);
-		// 增加运营商可开店数量
-		$this->shopNum($data['sid'],$this->aid);
-		// 清空取消合作修车厂的库存
-		// 给用户发送消息
-		$this->smsCancel($data['sid'],$data['content'],$data['company'],$data['reason']);
-		if($this->clearRation($data['sid']) == true){
-			Db::commit();
-			$this->result('',1,'操作成功，短信已发送给用户，请在审核通过列表，查看回收油详情');
-			
+		$validate = validate('shopCancel');
+		if(!$validate->check($data)){
+			$this->result('',0,$validate->getError());
 		}else{
-			Db::rollback();
-			$this->result('',0,'操作失败');
+			// 判断运营商是让用户领油还是换店面，领油为1清楚用户的邦保养次数
+			if($data['num'] == 1){
+				Db::table('u_card')->where('sid',$data['sid'])->setField('remain_times',0);
+			}
+
+			// 修改修车厂审核状态shop表及取消合作表的状态为1
+			if($this->setStatus($data['sid']) == true){
+				// 增加运营商库存
+				if($this->agentMateriel($data['sid'],$this->aid) == true){
+					// 增加运营商可开店数量
+					if($this->shopNum($data['sid'],$this->aid) == true){
+						// 给取消合作的修理厂下的用户发送短信
+						if($this->smsCancel($data['sid'],$data['content'],$data['company'],$data['reason']) == '请求成功'){
+
+							// 清空取消合作修车厂的库存
+							if($this->clearRation($data['sid']) == true){
+								Db::commit();
+								$this->result('',1,'操作成功，短信已发送给用户，请在审核通过列表，查看回收油详情');
+								
+							}else{
+								Db::rollback();
+								$this->result('',0,'操作失败');
+							}
+						}else{
+							Db::rollback();
+							$this->result('',0,$this->smsCancel($data['sid'],$data['content'],$data['company'],$data['reason']));
+						}
+					}else{
+						Db::rollback();
+						$this->result('',0,'增加可开店数量失败');
+					}
+				}else{
+					Db::rollback();
+					$this->result('',0,'增加库存失败');
+				}
+
+			}else{
+				Db::rollback();
+				$this->result('',0,'修改状态失败');
+			}
+			
+			
 		}
+		
 		
 
 	}
@@ -137,7 +181,7 @@ class ShopCancel extends Agent
 		$res = Db::table('cs_shop')->where('id',$sid)->setField('audit_status',4);
 		if($res !== false){
 			// 修改取消合作表审核时间
-			$re = Db::table('cs_apply_cancel')->where('id',$sid)->setField('audit_time',time());
+			$re = Db::table('cs_apply_cancel')->where('id',$sid)->update(['audit_time'=>time(),'audit_status'=>1]);
 			if($re !== false){
 				return true;
 			}
@@ -210,8 +254,13 @@ class ShopCancel extends Agent
 	 */
 	private function clearRation($sid)
 	{
-		$res=Db::table('cs_ration')->where('sid',$sid)->delete();
-		if($res){
+		$arr = Db::table('cs_ration')->where('sid',$sid)->field('ration,warning')->find();
+		if(!empty($arr)){
+			$res=Db::table('cs_ration')->where('sid',$sid)->delete();
+			if($res){
+				return true;
+			}
+		}else{
 			return true;
 		}
 	}
@@ -228,6 +277,9 @@ class ShopCancel extends Agent
 		// 根据修车厂配给计算运营商增加的可开通修理厂数量
 		// 获取修车厂的配给数量
 		$arr = Db::table('cs_ration')->where('sid',$sid)->field('ration,warning')->find();
+		if(empty($arr)){
+			return true;
+		};
 		$num = $arr['ration']/$arr['warning'];
 		$res = Db::table('ca_agent')
 		->where('aid',$aid)
@@ -248,15 +300,20 @@ class ShopCancel extends Agent
 	 */
 	public function smsCancel($sid,$content,$company,$reason)
 	{	
-		$con=$company.'因'.$reason.'停止邦保养服务,您可以'.$content;
+		// $con=$company.'因'.$reason.'停止邦保养服务,您可以'.$content;
+		$con = "您的验证码是：【".$reason."】。请不要把验证码泄露给其他人。";
 		$user_data=$this->userCar($sid);
 		foreach ($user_data as $k => $v) {
-			$res=$this->smsVerify($v['phone'],$con);
+			$res = $this->smsVerify($v['phone'],$con);
 		}
-		if($res == "请求成功"){
-			return  true;
-		}
+		// print_r($re);exit;
+		if($res == "提交成功"){
+			return true;
+		}else{
+			$this->result('',0,$res);
+		}	
 		
+
 	}
 
 

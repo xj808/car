@@ -1,7 +1,7 @@
 <?php
 namespace app\agent\controller;
 use app\base\controller\Agent;
-use msg\Msg;
+use Msg\Msg;
 use think\Db;
 /**
 * 运营商首页，信息页面
