@@ -1,7 +1,8 @@
 <?php 
 namespace app\shop\controller;
 use app\base\controller\Shop;
-use msg\Sms;
+use Firebase\JWT\JWT;
+use Msg\Sms;
 use think\Db;
 
 /**
@@ -15,7 +16,8 @@ class Login extends Shop
 	 */
 	public function initialize()
 	{
-		$this->Sms = new Sms();
+		$this->sms = new Sms();
+		header("Access-Control-Allow-Origin: *");
 	}
 
 	/**
@@ -62,7 +64,7 @@ class Login extends Shop
 		// 如果验证通过则进行登录操作
 		if($validate->check($data)){
 			// 检测手机验证码是否正确
-			$check = $this->Sms->compare($data['mobile'],$data['code']);
+			$check = $this->sms->compare($data['mobile'],$data['code']);
 			if($check !== false){
 				// 进行修改密码的操作
 				$res=Db::table('cs_shop')->where('phone',$data['mobile'])->setField('passwd',get_encrypt($data['passwd']));
@@ -96,7 +98,7 @@ class Login extends Shop
 		$mobile = input('post.mobile');
 		$code = $this->apiVerify();
 		$content = "您的短信验证码是【{$code}】。您正在通过手机号重置登录密码，如非本人操作，请忽略该短信。";
-		$res = $Sms->send_code($mobile,$content,$code);
+		$res = $this->sms->send_code($mobile,$content,$code);
 		$this->result('',1,$res);
 	}
 
@@ -108,9 +110,9 @@ class Login extends Shop
      */
     private function token($sid,$usname){
         $key=create_key();   //
-        $token=['sid'=>$sid,'usname'=>$login];
+        $token=['id'=>$sid,'usname'=>$usname];
         $JWT=JWT::encode($token,$key);
-        JWT::$leeway = 60;
+        JWT::$leeway = 600;
         return $JWT;
     }
 

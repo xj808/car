@@ -2,7 +2,7 @@
 namespace app\shop\controller;
 use app\base\controller\Shop;
 use think\Db;
-use msg\Sms;
+use Msg\Sms;
 
 /**
  * 汽修厂邦保养操作
@@ -16,7 +16,6 @@ class Bang extends Shop
 	public function initialize()
 	{
 		parent::initialize();
-		$this->Sms = new Sms();
 	}
 
 	/**
@@ -83,9 +82,13 @@ class Bang extends Shop
 		if($count > 0){
 			$info = $this->getCarInfo($plate);
 			$check = $this->checkOil($this->sid,$info['oid'],$info['litre']);
-			return ($check !== false) ? $info : '该油品库存不足';
+			if($check !== false){
+				$this->result($info,1,'获取信息成功');
+			}else{
+				$this->result('',0,'该油品库存不足');
+			}
 		}else{
-			return $plate.'不属于该汽修厂';
+			$this->result('',0,$plate.'不属于该汽修厂');
 		}
 
 	}
@@ -102,7 +105,7 @@ class Bang extends Shop
 		// 如果验证通过则进行邦保养操作
 		if($validate->check($data)){
 			// 检测手机验证码是否正确
-			$check = $this->Sms->compare($data['phone'],$data['code']);
+			$check = $this->sms->compare($data['phone'],$data['code']);
 			if($check !== false){
 				// 检测库存是否充足
 				$oilCheck = $this->checkOil($this->sid,$data['oid'],$data['litre']);
@@ -166,7 +169,7 @@ class Bang extends Shop
 		$card_number = input('post.card_number');
 		$code = $this->apiVerify();
 		$content = "您邦保养卡号为【{$card_number}】参与本次保养的验证码为【{$code}】，请勿泄露给其他人。";
-		$res = $Sms->send_code($mobile,$content,$code);
+		$res = $this->sms->send_code($mobile,$content,$code);
 		$this->result('',1,$res);
 	}
 

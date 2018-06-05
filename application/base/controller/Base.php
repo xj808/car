@@ -13,8 +13,6 @@ class Base extends Controller{
     {
         $this->sms = new Sms();
     }
-
-
     /**
      * 验证token
      * @return [type] [description]
@@ -37,10 +35,6 @@ class Base extends Controller{
             }
         }
     }
-
-
-
-
     /**
      * 前台返回token时验证token
      * @param  token
@@ -53,16 +47,13 @@ class Base extends Controller{
         $sign=json_decode($sign,true);
         return $sign['id'];
     }
-
     /**
      * 获取省级名称
      * @return 省级地区名称
      */
     public function province(){
-
         return Db::table('co_china_data')->where('pid',1)->select();
     }
-
     /**
      * 获取市级
      * @return 市级地区名称
@@ -70,15 +61,12 @@ class Base extends Controller{
     public function city($pid){
         return Db::table('co_china_data')->where('pid',$pid)->select();
     }
-
     /**
      * @return 获取城市名称
      */
     public function county($cid){
         return Db::table('co_china_data')->where('pid',$cid)->select();
     }
-
-
     /**
      * 生成验证码
      * @return json 验证码
@@ -86,7 +74,6 @@ class Base extends Controller{
     public function verify(){
         $this->result($this->apiVerify(),1,'验证码获取成功');
     }
-
     /**
      * 生成API验证码
      */
@@ -94,8 +81,6 @@ class Base extends Controller{
     {
         return mt_rand(1000,9999);
     }
-
-
     /**
      * 注册银行列表
      * @return [type] [description]
@@ -103,8 +88,6 @@ class Base extends Controller{
     public function bankCode(){
         return Db::table('co_bank_code')->select();
     }
-
-
     /**
      * 手机发送验证码
      * @param  [type] $phone   [手机号]
@@ -115,12 +98,15 @@ class Base extends Controller{
     {
         return $this->sms->send_code($phone,$content,$code);
     }
+<<<<<<< HEAD
 
 
 
 
 
 
+=======
+>>>>>>> origin/dev
      /**
      * 修改密码发送手机验证码
      * @return [type] [发送成功或失败]
@@ -131,10 +117,12 @@ class Base extends Controller{
         $code=$this->apiVerify();
         $content="您的短信验证码是：【".$code."】。您正在通过手机号重置登录密码，如非本人操作，请忽略该短信。";
        return  $this->smsVerify($phone,$content,$code);
-
     }
+<<<<<<< HEAD
+=======
 
 
+>>>>>>> origin/dev
     /**
      * 获取每组油的升数
      * @return 数组
@@ -143,8 +131,11 @@ class Base extends Controller{
     {   $where=[['pid','>','0'],['def_num','>',0]];
         return Db::table('co_bang_cate')->where($where)->field('id,def_num')->select();
     }
+<<<<<<< HEAD
+=======
 
 
+>>>>>>> origin/dev
     /**
      * 修改状态
      * @param  [type] $table   要修改的表
@@ -159,7 +150,9 @@ class Base extends Controller{
             return true;
         }
     }
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/dev
     
-
 }
