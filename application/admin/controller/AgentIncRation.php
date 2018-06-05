@@ -97,6 +97,7 @@ class AgentIncRation extends Admin
 				// 修改提高配给订单的审核为已审核 和审核时间
 				$res = Db::table('ca_increase')->where('id',$data['id'])->setField(['audit_status'=>1,'audit_time'=>time()]);
 				if($res !== false){
+					
 					Db::commit();
 					$this->result('',1,'操作成功操作');
 				}else{

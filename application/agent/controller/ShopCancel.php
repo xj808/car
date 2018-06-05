@@ -110,33 +110,41 @@ class ShopCancel extends Agent
 		if(!$validate->check($data)){
 			$this->result('',0,$validate->getError());
 		}else{
-			// 判断运营商是让用户领油还是换店面，领油为1清楚用户的邦保养次数
-			if($data['num'] == 1){
-				Db::table('u_card')->where('sid',$data['sid'])->setField('remain_times',0);
-			}
-
 			// 修改修车厂审核状态shop表及取消合作表的状态为1
 			if($this->setStatus($data['sid']) == true){
 				// 增加运营商库存
 				if($this->agentMateriel($data['sid'],$this->aid) == true){
 					// 增加运营商可开店数量
 					if($this->shopNum($data['sid'],$this->aid) == true){
-						// 给取消合作的修理厂下的用户发送短信
-						if($this->smsCancel($data['sid'],$data['content'],$data['company'],$data['reason']) == '请求成功'){
-
 							// 清空取消合作修车厂的库存
 							if($this->clearRation($data['sid']) == true){
-								Db::commit();
-								$this->result('',1,'操作成功，短信已发送给用户，请在审核通过列表，查看回收油详情');
-								
+								// 判断运营商选择让用户领油还是换店   1领油  2换店
+								if($data['num'] == 1){
+
+                                    Db::table('u_card')->where('sid',$data['sid'])->setField('remain_times',0);
+                                    $res = $this->oilSms($data['sid'],$data['company'],$data['reason'],$data['content']);
+                                    if($res == '请求成功'){
+                                    	Db::commit();
+										$this->result('',0,'操作成功,请在通过列表查看需要油品详情');
+                                    }else{
+                                    	Db::rollback();
+										$this->result('',0,$res);
+                                    }
+
+                                }else{
+                                	$res = $this->oilSms($data['sid'],$data['company'],$data['reason']);
+                                    if($res == '请求成功'){
+                                    	Db::commit();
+										$this->result('',0,'操作成功,请在通过列表查看需要油品详情');
+                                    }else{
+                                    	Db::rollback();
+										$this->result('',0,$res);
+                                    }
+                                }	
 							}else{
 								Db::rollback();
 								$this->result('',0,'操作失败');
 							}
-						}else{
-							Db::rollback();
-							$this->result('',0,$this->smsCancel($data['sid'],$data['content'],$data['company'],$data['reason']));
-						}
 					}else{
 						Db::rollback();
 						$this->result('',0,'增加可开店数量失败');
@@ -230,6 +238,43 @@ class ShopCancel extends Agent
 
 
 	/**
+	 * 发送短信给用户
+	 * @param  [type] $sid     [description]
+	 * @param  [type] $content [description]
+	 * @return [type]          [description]
+	 */
+	public function oilSms($sid,$company,$reason,$content='')
+	{	
+		// $con=$company.'因'.$reason.'停止邦保养服务,您可以'.$content;
+		if($content == ''){
+            $con = '【'.$company.'】'.'因,【'.$reason.'】停止邦保养服务,您可以更换到附近其他维修厂';
+        }else{
+            $con = '【'.$company.'】'.'因,【'.$reason.'】停止邦保养服务,您可以到【'.$content.'】领域剩余油品';
+        }
+		$user_data=$this->userCar($sid);
+		if($user_data){
+			foreach ($user_data as $k => $v) {
+				$res = $this->smsVerify($v['phone'],$con);
+			}
+			// print_r($re);exit;
+			if($res == "提交成功"){
+				return  $res;
+			}else{
+				return $res;
+			}	
+		}else{
+			return '该修车厂没有用户';
+		}
+		
+		
+
+	}
+
+
+
+
+
+	/**
 	 *获取修车厂用户电话、车辆用油升数、车牌号
 	 * @param  [type] $sid [修车厂id]
 	 * @return [type]      [description]
@@ -239,9 +284,10 @@ class ShopCancel extends Agent
 		return Db::table('u_card uc')
 				->join('u_user uu','uc.uid = uu.id')
 				->join('co_bang_data bd','uc.car_cate_id = bd.cid')
-				->where([['sid','=',$sid],['remain_times','>',0]])
+				->where([['uc.sid','=',$sid],['uc.remain_times','>',0]])
 				->field('phone,name,oil_name,litre,plate,uc.oil,remain_times')
 				->select();
+	
 	}
 
 
@@ -292,30 +338,7 @@ class ShopCancel extends Agent
 		
 	}
 
-	/**
-	 * 发送短信给用户
-	 * @param  [type] $sid     [description]
-	 * @param  [type] $content [description]
-	 * @return [type]          [description]
-	 */
-	public function smsCancel($sid,$content,$company,$reason)
-	{	
-		// $con=$company.'因'.$reason.'停止邦保养服务,您可以'.$content;
-		$con = "您的验证码是：【".$reason."】。请不要把验证码泄露给其他人。";
-		$user_data=$this->userCar($sid);
-		foreach ($user_data as $k => $v) {
-			$res = $this->smsVerify($v['phone'],$con);
-		}
-		// print_r($re);exit;
-		if($res == "提交成功"){
-			return true;
-		}else{
-			$this->result('',0,$res);
-		}	
-		
-
-	}
-
+	
 
 	/**
 	 * 把运营商与修车厂需要交接的表入库到取消合作表

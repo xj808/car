@@ -13,13 +13,13 @@ return [
     // 数据库类型
     'type'            => 'mysql',
     // 服务器地址
-    'hostname'        => '123.207.162.161',
+    'hostname'        => '10.66.130.70',
     // 数据库名
-    'database'        => 'sjyd',
+    'database'        => 'cc',
     // 用户名
-    'username'        => 'gouyueli',
+    'username'        => 'cdb_outerroot',
     // 密码
-    'password'        => 'Gyl@sjyd0311!',
+    'password'        => 'XJsw809Ctb4r',
     // 端口
     'hostport'        => '3306',
     // 连接dsn
