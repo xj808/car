@@ -52,38 +52,18 @@ class AgentCancel extends Admin
 
 
 	/**
-	 * 取消合作驳回操作
+	 * 点击驳回理由显示内容
 	 * @return [type] [description]
 	 */
-	public function reject()
+	public function canReason()
 	{
-		$reason = input('post.reason');
 		$id = input('post.id');
-		$res = Db::table('ca_apply_cash')->where('id',$id)->setField('audit_status',2);
-		if($res !== false){
-			// 获取运营商电话
-			$data = Db::table('ca_apply_cash ac')
-					->join('ca_agent ca','ca.aid = ac.aid')
-					->where('ac.id',$id)
-					->field('phone,ac.create_time')
-					->find();
-			// 给运营商发送短信
-			$tx = '提现';
-			$content = "您于【".$data['create_time']."】的【".$tx."】申请，因【".$reason."】被驳回，请完成修订后重新提交。";
-			// print_r($content);exit;
-			$sms = $this->smsVerify($data['phone'],$content);
-			if($sms == '提交成功'){
-				Db::commit();
-				$this->result('',1,'驳回成功,已给运营商发送短信');
-			}else{
-				Db::rollback();
-				$this->result('',0,$sms);
-			}
+		$reason = $this->reason($id,'ca_apply_cash','reason');
+		if($reason){
+			$this->result($reason,1,'获取理由成功');
 		}else{
-			Db::rollback();
-			$this->result('',0,'修改状态成功');
+			$this->result('',0,'获取理由失败');
 		}
-
 	}
 
 

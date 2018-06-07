@@ -157,10 +157,10 @@ class AgentMateriel extends Admin
 	 * 点击驳回理由显示内容
 	 * @return [type] [description]
 	 */
-	public function reason()
+	public function matReason()
 	{
 		$id = input('post.id');
-		$reason = Db::table('ca_apply_materiel')->where('id',$id)->value('reason');
+		$reason = $this->reason($id,'ca_apply_materiel','reason')
 		if($reason){
 			$this->result($reason,1,'获取理由成功');
 		}else{

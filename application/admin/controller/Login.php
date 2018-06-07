@@ -19,14 +19,14 @@ class Login extends Base
 		$validate = validate('Login');
 		
 		if($validate->check($data)){
-			$arr = Db::table('ca_auth_user')->where('name',$data['name'])->find();
+			$arr = Db::table('am_auth_user')->where('name',$data['name'])->find();
 			// 比较用户名是否存在
 			if($arr['name'] == $data['name']){
 
 				// 比较输入的密码是否和数据库存的密码一致
 				if(compare_password($data['pwd'],$arr['pwd'])){
 
-					$token = $this->token($data['name'],$arr['id']);
+					$token = $this->token($arr['id'],$data['name']);
 
 					$this->result($token,1,'登录成功');
 				}else{
@@ -57,7 +57,7 @@ class Login extends Base
         $key=create_key();   //
         $token=['id'=>$uid,'login'=>$login];
         $JWT=JWT::encode($token,$key);
-        JWT::$leeway =10;
+        JWT::$leeway =600;
         return $JWT;
     }
 
