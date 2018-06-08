@@ -162,7 +162,7 @@ class AgentForward extends Admin
 		$arr =[
 			'audit_status'=>2,
 			'audit_time'=>time(),
-			'audit_person'=>$$data['audit_person'],
+			'audit_person'=>$data['audit_person'],
 		];
 		$res = Db::table('ca_apply_cash')->where('id',$data['id'])->update($arr);
 		if($res !== false){
