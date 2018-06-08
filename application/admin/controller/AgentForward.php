@@ -77,21 +77,21 @@ class AgentForward extends Admin
 		$aid = input('post.aid');
 		$page = input('post.page')? :1;
 		$pageSize = 10;
-		$count = Db::table('ca_apply_cash')->where(['aid'=>$aid,'audit_status'=>1])->count();
+        $count = Db::table('ca_apply_cash')->where(['aid'=>$aid,'audit_status'=>1])->count();
 
-		$rows = ceil($count / $pageSize);
+        $rows = ceil($count / $pageSize);
 
-		$list = Db::table('ca_apply_cash')
-				->where(['aid'=>$aid,'audit_status'=>1])
-				->order('id desc')->page($page,$pageSize)
-				->field('audit_time,money,sur_amount')
-				->select();
+        $list = Db::table('ca_apply_cash')
+                ->where(['aid'=>$aid,'audit_status'=>1])
+                ->order('id desc')->page($page,$pageSize)
+                ->field('audit_time,money,sur_amount')
+                ->select();
 
-		if($count > 0){
-			$this->result(['list'=>$list,'rows'=>$rows],1,'获取列表成功');
-		}else{
-			$this->result('',0,'暂无数据');
-		}	
+        if($count > 0){
+            $this->result(['list'=>$list,'rows'=>$rows],1,'获取列表成功');
+        }else{
+            $this->result('',0,'暂无数据');
+        }   
 	}
 
 
@@ -99,12 +99,15 @@ class AgentForward extends Admin
 	 * 提现审核列表
 	 * @return [type] [description]
 	 */
-	public function audit()
+	public function auditList()
 	{
+		// 获取运营商电话
+		$phone = input('post.phone');
 		// 获得运营商id
 		$aid = input('post.aid');
 		// 获取本次提现审核的时间和金额
-		$now = Db::table('ca_apply_cash')->where(['aid'=>$aid,'audit_status'=>0])->field('id,aid,money,sur_amount')->find();
+		$now = Db::table('ca_apply_cash')->where(['aid'=>$aid,'audit_status'=>0])->field('id,aid,money,sur_amount.create_time')->find();
+
 		$old = Db::table('ca_apply_cash')
 				->where(['aid'=>$aid,'audit_status'=>1])
 				->order('audit_time desc')->limit(1)
@@ -116,7 +119,9 @@ class AgentForward extends Admin
 			'old_money'=>$old['money'],
 			'old_time'=>$old['create_time'],
 			'now_money'=>$now['money'],
-			'now_amount'=>$now['sur_amount']
+			'now_amount'=>$now['sur_amount'],
+			'phone'=>$phone,
+			'create_time'=>$now['create_time']
 		];
 
 		if($list){
@@ -169,6 +174,8 @@ class AgentForward extends Admin
 				$this->result('',1,'处理成功');
 			}else{
 				// 进行异常处理
+				$errData = ['apply_id'=>$id,'apply_cate'=>1,'audit_person'=>$audit_person];
+				Db::table('am_apply_cash_error')->insert($errData);
 				$this->result('',0,'打款成功，处理异常，请联系技术部');
 			}
         }else{
@@ -193,7 +200,7 @@ class AgentForward extends Admin
 		$list = Db::table('ca_apply_cash ac')
 				->join('ca_agent ca','ac.aid = ca.aid')
 				->where('ac.audit_status',$status)
-				->field('ac.id,ac.aid,company,leader,money,ac.create_time,ac.audit_time')
+				->field('ac.id,ac.aid,company,phone,leader,money,ac.create_time,ac.audit_time')
 				->order('id desc')
 				->page($page,$pageSize)
 				->select();
