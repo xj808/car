@@ -1,7 +1,9 @@
 <?php
 namespace app\admin\controller;
-use think\Db;
 use app\base\controller\Admin;
+use think\Db;
+use Msg\Sms;
+use pay\Epay;
 /**
 * 运营商提现
 */
@@ -132,18 +134,48 @@ class AgentForward extends Admin
 	 * @param  string $value [description]
 	 * @return [type]        [description]
 	 */
-	public function adopt($value='')
+	public function adopt()
 	{
 		$id = input('post.id');
-		$aid = input('post.aid');
-		$admin_id = Db::table('ca_auth_user')->where('id',$this->admin_id)->value('name');
-		// 修改提现表未已通过，修改通过时间，修改审核人
-		$res = Db::table('ca_apply_cash')->where('id',$id)->setField('audit_status',1);
+		$mobile = input('post.phone');
+		// 获取提现信息
+		$order = Db::table('ca_apply_cash')->field('aid,odd_number,account,account_name,bank_code,money,create_time')->where('id',$id)->find();
+		// 获取审核人姓名
+		$audit_person = Db::table('ca_auth_user')->where('id',$this->admin_id)->value('name');
+		// 收取手续费1.5/1000
+        $cmms = ($money*15/10000 < 1 ) ? 1 : $money*15/10000;
+        $cash = $money - $cmms;
+        // 进行提现操作
+        $epay = new Epay();
+        $res = $epay->toBank($order['odd_number'],$order['account'],$order['account_name'],$order['bank_code'],$order['money'],$order['account_namec'].'测试提现');
+        // 提现成功后操作
+        if($res['return_code']=='SUCCESS' && $res['result_code']=='SUCCESS'){
+        	// 更新数据
+        	$arr = [
+				'audit_time' => time(),
+				'audit_person' => $audit_person,
+				'audit_status' => 1,
+				'wx_cmms' => $cmms,
+	            'cmms_amt' => $res['cmms_amt']/100
+			];
+			$save = Db::table('ca_apply_cash')->where('id',$id)->update($arr);
+			if($save !== false){
+				// 处理短信参数
+				$time = $order['create_time'];
+				$money = $order['money'];
+	        	// 发送短信给运营商
+	        	$content = "您于【{$time}】提交的【{$money}】元的提现申请，通过审核，24小时内托管银行支付到账（节假日顺延）！";
+	        	$send = $this->sms->send_code($mobile,$content);
+				$this->result('',1,'处理成功');
+			}else{
+				// 进行异常处理
+				$this->result('',0,'打款成功，处理异常，请联系技术部');
+			}
+        }else{
+        	// 返回错误信息
+        	$this->result('',0,$res['err_code_des']);
+        }
 	}
-
-
-
-
 
 
 

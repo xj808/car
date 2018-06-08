@@ -80,8 +80,10 @@ class Gift extends Shop
 				// 如果充足则减少库存
 				$se = Db::table('cs_ration')->where('sid',$this->sid)->where('materiel',$res['gid'])->setDec('stock',1);
 			}else{
+				// 获取兑换服务名称
+				$server_name = Db::table('cs_service')->where('sid',$this->sid)->value('service');
 				// 获取邦保养卡号
-				$card_number = '';
+				$card_number = Db::table('cs_gift')->alias('g')->join(['u_card'=>'c'],'g.cid=c.id')->where('excode',$excode)->value('card_number');
 				// 如果等于3则兑换自己的服务,添加收入记录
 				$si = Db::table('cs_ex_income')->add(['sid'=>$this->sid,'money'=>100,'excode'=>$excode,'card_number'=>$card_number]);
 				// 系统补助100元
@@ -106,8 +108,24 @@ class Gift extends Shop
 	 */
 	public function income()
 	{
-		// Db::table('cs_ex_income')->order('id desc')->select();
-		$this->result('',0,'暂无数据');
+		$page = input('post.page') ? : 1;
+		// 获取每页条数
+		$pageSize = 2;
+		// 获取分页总条数
+		$count = Db::table('cs_ex_income')->where('sid',$this->sid)->count();
+		$rows = ceil($count / $pageSize);
+		// 获取数据
+		$list = Db::table('cs_ex_income')
+				->where('sid',$this->sid)
+				->order('id desc')
+				->page($page, $pageSize)
+				->select();
+		// 返回给前端
+		if($count > 0){
+			$this->result(['list'=>$list,'rows'=>$rows],1,'获取成功');
+		}else{
+			$this->result('',0,'暂无数据');
+		}
 	}
 
 	/**
