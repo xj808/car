@@ -121,7 +121,7 @@ class MaterialAgent extends Agent
 			$arr[]=['materiel_id'=>$v,'materiel'=>$data['materiel'][$k],'num'=>$data['num'][$k],'remarks'=>$data['remarks'][$k]];
 		};
 		$ar=[
-			'apply_sn'=>build_order_sn(),
+			'odd_number'=>build_order_sn(),
 			'aid'=>$this->aid,
 			'detail'=>$arr,
 		];

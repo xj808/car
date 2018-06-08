@@ -95,6 +95,31 @@ class ShopCancel extends Agent
 
 
 
+
+	public function adopt()
+	{
+		// 获取修车厂名称，取消合作理由，状态类型 1更换店铺  2留油到修车厂 修车厂id  取消合作订单id
+		$data = input('post.');
+		Db::startTrans();
+		// 判断是更换店铺还是留油，更换店铺给用户发送短信，留油不用发送短信直接结算
+		if($data['num'] !== 1){
+			 //修改修车厂状态为取消合作继续做邦保养状态
+			 $audit_status = Db::table('cs_shop')->where('id',$data['sid'])->setField('audit_status',6);
+			 if($audit_status !== false){
+
+			 	// 查看汽修厂有多少用户，留多少油到修车厂
+			 	$a = $this->userCar();
+			 	print_r($a);exit;
+			 }else{
+			 	$this->result('',0,'修改状态失败');
+			 }
+			  
+
+		}else{
+
+		}
+	}
+
 	/**
 	 * 取消形式修车厂自己把剩下的用户油发送
 	 * @param  [type] $sid [description]
@@ -164,7 +189,7 @@ class ShopCancel extends Agent
 		
 		
 
-	}
+	// }
 
 	/**
 	 * 审核通过列表详情
@@ -243,14 +268,10 @@ class ShopCancel extends Agent
 	 * @param  [type] $content [description]
 	 * @return [type]          [description]
 	 */
-	public function oilSms($sid,$company,$reason,$content='')
+	public function oilSms($sid,$company,$reason,$content)
 	{	
 		// $con=$company.'因'.$reason.'停止邦保养服务,您可以'.$content;
-		if($content == ''){
-            $con = '【'.$company.'】'.'因,【'.$reason.'】停止邦保养服务,您可以更换到附近其他维修厂';
-        }else{
-            $con = '【'.$company.'】'.'因,【'.$reason.'】停止邦保养服务,您可以到【'.$content.'】领域剩余油品';
-        }
+        $con = '【'.$company.'】'.'因,【'.$reason.'】停止邦保养服务,您可以更换到附近其他维修厂';
 		$user_data=$this->userCar($sid);
 		if($user_data){
 			foreach ($user_data as $k => $v) {

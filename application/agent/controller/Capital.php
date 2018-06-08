@@ -80,17 +80,32 @@ class Capital extends Agent
 	{
 		
 		$data=input('post.');
-		if($data['money']){
+		Db::startTrans();
+		if(!empty($data['money'])){
 			// 判断运营商余额是否充足
 			if($this->ifMoney($data['money'],$this->aid)){
-				$data['cash_apply_sn']=rand().time();
-				$data['aid']=$this->aid;
-				$res=Db::table('ca_apply_cash')->strict(false)->insert($data);
-				if($res){
-					$this->result('',1,'申请成功,请等待审核');
+				// 减少运营商总金额
+				$result = Db::table('ca_agent')->where('aid',$this->aid)->dec('balance',$data['money'])->update();
+				if($result !== false){
+
+					$data['odd_number']=build_order_sn();
+					$data['aid']=$this->aid;
+					// 获取运营商现有余额
+					$data['sur_amount'] = Db::table('ca_agent')->where('aid',$this->aid)->value('balance');
+					// 提现申请插入数据库
+					$res=Db::table('ca_apply_cash')->strict(false)->insert($data);
+					if($res){
+						Db::commit();
+						$this->result('',1,'申请成功,请等待审核');
+					}else{
+						Db::rollback();
+						$this->result('',0,'申请成功,请等待审核');
+					}
 				}else{
-					$this->result('',0,'申请成功,请等待审核');
+					$this->result('',0,'减少运营商余额失败');
 				}
+
+				
 			}else{
 				$this->result('',0,'您的余额不足');
 			}
@@ -113,7 +128,7 @@ class Capital extends Agent
 		
 		$list = Db::table('ca_apply_cash')
 				->where('aid',$this->aid)
-				->field('cash_apply_sn,account,money,create_time,audit_time,audit_status')
+				->field('odd_number,account,money,create_time,audit_time,audit_status')
 				->order('id desc')->page($page,$pageSize)->select();
 		if($count > 0){
 			$this->result(['list'=>$list,'rows'=>$rows],1,'获取成功');

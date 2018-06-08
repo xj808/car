@@ -56,4 +56,19 @@ class Admin extends Base
         $a = Db::table('co_china_data')->whereIn('id',$city)->select();
         return $a = array_str($a,'pid');
     }
+
+
+
+    /**
+     * 点击驳回理由显示内容
+     * @param  [type] $id     [description]订单id或者修车厂id
+     * @param  [type] $table  [description]数据库表
+     * @param  [type] $reason [description]输入驳回理由的字段
+     * @return [type]         [description]
+     */
+    public function reason($id,$table,$reason)
+    {
+        return Db::table($table)->where('id',$id)->value($reason);
+    }
+
 }

@@ -19,6 +19,13 @@ class SmallInvoice extends Admin
 	}
 
 
+
+	public function cardMoney($value='')
+	{
+		# code...
+	}
+
+
 	// 列表
 	private function index($page,$status)
 	{
