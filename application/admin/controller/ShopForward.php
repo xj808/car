@@ -244,7 +244,7 @@ class ShopForward extends Admin
 				->join('cs_shop cs','ac.sid = cs.id')
 				->where('ac.audit_status',$status)
 				->order('ac.id desc')
-				->field('ac.sid,ac.id,company,leader,phone,moeny,ac.create_time,ac.audit_time')
+				->field('ac.sid,ac.id,company,leader,phone,money,ac.create_time,ac.audit_time')
 				->page($page,$pageSize)
 				->select();
 		if($count > 0){
