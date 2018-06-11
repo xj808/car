@@ -140,7 +140,7 @@ class Center extends Agent{
 			$vo=$this->upLicense($ar,$data['voucher'],$data['deposit'],$this->aid);
 			if($vo==true){
 				Db::commit();
-				$this->result('',1,'设置成功');
+				$this->result('',1,'设置成功,请等待总后台审核');
 			}else{
 				Db::rollback();
 				$this->result('',0,'设置失败');

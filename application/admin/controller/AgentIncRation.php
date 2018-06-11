@@ -52,7 +52,7 @@ class AgentIncRation extends Admin
 			$detail = Db::table('ca_increase ci')
 					->join('ca_agent ca','ci.aid = ca.aid')
 					->where(['ci.aid'=>$aid,'id'=>$id])
-					->field('ci.id,ci.aid,voucher,company,phone,regions,price')
+					->field('ci.id,ci.aid,voucher,company,phone,ci.regions,price')
 					->find();
 			if($detail){
 				$this->result($detail,1,'获取数据成功');
@@ -97,9 +97,16 @@ class AgentIncRation extends Admin
 				// 修改提高配给订单的审核为已审核 和审核时间
 				$res = Db::table('ca_increase')->where('id',$data['id'])->setField(['audit_status'=>1,'audit_time'=>time()]);
 				if($res !== false){
+					// 修改运营商状态
+					if($result !== false){
+
+						Db::commit();
+						$this->result('',1,'操作成功操作');
+					}else{
+						Db::rollback();
+						$this->result('',0,'操作失败');
+					}
 					
-					Db::commit();
-					$this->result('',1,'操作成功操作');
 				}else{
 					Db::rollback();
 					$this->result('',0,'操作失败');

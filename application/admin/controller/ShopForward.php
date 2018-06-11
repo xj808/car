@@ -21,19 +21,19 @@ class ShopForward extends Admin
 
 
 	/**
-	 * 提现通过列表
+	 * 提现驳回列表
 	 * @return [type] [description]
 	 */
 	public function rejectList()
 	{
 		$page = input('post.page')? : 1;
-		$this->index($page,1);
+		$this->index($page,2);
 	}
 
 
 
 	/**
-	 * 提现驳回列表
+	 * 提现通过列表
 	 * @return [type] [description]
 	 */
 	public function adoptList()
@@ -152,14 +152,14 @@ class ShopForward extends Admin
 		$arr = [
 			'audit_status'=>2,
 			'reason'=>$data['reason'],
-			'audit_person'=>$data['audit_person'],
+			'audit_person'=>$audit_person,
 		];
 		// 修改数据库状态为已驳回，修改驳回理由，修改处理人
 		$res = Db::table('cs_apply_cash')->where('id',$data['id'])->update($arr);
 		if($res !== false){
 
 			// 驳回成功把运营商的余额增加
-			$result = Db::table('cs_shop')->where('sid',$data['sid'])->inc('balance',$data['money'])->update();
+			$result = Db::table('cs_shop')->where('id',$data['sid'])->inc('balance',$data['money'])->update();
 
 			if($result !== false){
 				// 给运营商发送短信
