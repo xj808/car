@@ -26,7 +26,7 @@ class AgentList extends Admin
 		if($count > 0){
 			$this->result(['list'=>$list,'rows'=>$rows],1,'获取列表成功');
 		}else{
-			$this->result('',0,'获取列表失败');
+			$this->result('',0,'暂无数据');
 		}
 	}
 
@@ -43,7 +43,7 @@ class AgentList extends Admin
 		if($detail){
 			$this->result($detail,1,'获取数据成功');
 		}else{
-			$this->result('',0,'获取数据失败');
+			$this->result('',0,'暂无数据');
 		}
 	}
 
@@ -64,7 +64,7 @@ class AgentList extends Admin
 		if($list){
 			$this->result($list,1,'获取数据成功');
 		}else{
-			$this->result($list,0,'获取数据失败');
+			$this->result($list,0,'暂无数据');
 		}
 
 	}

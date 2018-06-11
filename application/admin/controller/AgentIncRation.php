@@ -57,7 +57,7 @@ class AgentIncRation extends Admin
 			if($detail){
 				$this->result($detail,1,'获取数据成功');
 			}else{
-				$this->result($detail,0,'获取数据成功');
+				$this->result($detail,0,'获取数据失败');
 			}
 		}
 

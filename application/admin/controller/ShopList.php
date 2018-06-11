@@ -48,7 +48,7 @@ class ShopList extends Admin
 		if($list){
 			$this->result($list,1,'获取列表成功');
 		}else{
-			$this->result('',0,'获取列表失败');
+			$this->result('',0,'暂无数据');
 		}
 	}
 
@@ -82,10 +82,14 @@ class ShopList extends Admin
 		$sid = input('post.id');
 		// 获取关停修车厂理由
 		$reason = input('post.reason');
+		$data = [
+			'sid'=>$sid,
+			'reason'=>$reason,
+		];
 		Db::startTrans();
-		$res = Db::table('cs_shop')->where('id',$sid)->update(['audit_status'=>5,'down_time'=>time()]);
+		$res = Db::table('cs_shut_logs')->insert($data);
 		if($res !== false){
-			$result = Db::table('cs_shop_set')->where('sid',$sid)->inc('close_count')->update(['close_reason'=>$reason]);
+			$result = Db::table('cs_shop')->where('id',$sid)->update(['down_time'=>time(),'audit_status'=>5]);
 			if($result !== false){
 				Db::commit();
 				$this->result('',1,'关闭成功');

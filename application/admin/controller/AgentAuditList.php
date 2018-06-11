@@ -43,7 +43,7 @@ class AgentAuditList extends Admin
 			if($list){
 				$this->result($list,1,'获取数据成功');
 			}else{
-				$this->result($list,0,'获取数据失败');
+				$this->result($list,0,'暂无数据');
 			}
 
 		}else{

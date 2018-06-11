@@ -27,7 +27,7 @@ class ShopDownList extends Admin
 		if($count > 0){
 			$this->result(['list'=>$list,'rows'=>$rows],1,'获取列表成功');
 		}else{
-			$this->result('',0,'获取列表失败');
+			$this->result('',0,'暂无数据');
 		}
 	}
 

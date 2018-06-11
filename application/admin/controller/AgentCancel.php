@@ -52,7 +52,7 @@ class AgentCancel extends Admin
 
 
 	/**
-	 * 点击驳回理由显示内容
+	 * 点击取消理由显示内容
 	 * @return [type] [description]
 	 */
 	public function canReason()
@@ -67,7 +67,10 @@ class AgentCancel extends Admin
 	}
 
 
-
+	/**
+	 * 运营商取消合作确认通过
+	 * @return [type] [description]
+	 */
 	public function adopt()
 	{
 		// 获取取消合作订单id、获取运营商id、获取取消合作理由、获取运营商名称
@@ -87,8 +90,30 @@ class AgentCancel extends Admin
 				$arr['detail']=$agent_ration;
 				$result = Db::table('ca_apply_cancel')->json(['detail'])->insert($arr);
 				if($result){
-					// 清除运营商的库存，修改运营商为取消合作。
-					$res = Db::table('ca_agent')->where('aid',$data['aid'])->setField();
+					//修改运营商为取消合作。
+					$res = Db::table('ca_agent')->where('aid',$data['aid'])->setField('audit_status',6);
+					if($res !== false){
+						 // 清除运营商的库存
+						 $clear = Db::table('ca_ration')->where('aid',$data['aid'])->delete();
+						 if($clear){
+						 	// 给修车厂发送短信
+						 	$oilSms = $this->oilSms($aid,$company,$reason);
+						 	if($oilSms == '请求成功' && $oilSms == '该运营商旗下没有修车厂'){
+						 		Db::commit();
+								$this->result('',1,'取消合作成功');
+						 	}else{
+						 		Db::commit();
+								$this->result('',1,$oilSms);
+						 	}
+						 	
+						 }else{
+						 	Db::rollback();
+							$this->result('',0,'取消合作失败');
+						 }
+					}else{
+						Db::rollback();
+						$this->result('',0,'修改运营商为取消合作成功');
+					}
 				}else{
 					Db::rollback();
 					$this->result('',0,'运营商物料详情失败');
@@ -103,10 +128,6 @@ class AgentCancel extends Admin
 			Db::rollback();
 			$this->result('',0,'更改修车厂取消合作失败');
 		}
-		// 给取消合作运营商下的修车厂发送短信。
-		
-		// 运营商库存回收所有修车厂物料
-		// 总后台回收所有运营商库存
 	}
 
 
@@ -230,6 +251,36 @@ class AgentCancel extends Admin
 		}else{
 			$this->result('',0,'暂无数据');
 		}
+	}
+
+
+	/**
+	 * 发送短信给修车厂
+	 * @param  [type] $sid     [description]
+	 * @param  [type] $content [description]
+	 * @return [type]          [description]
+	 */
+	public function oilSms($aid,$company,$reason)
+	{	
+		// $con=$company.'因'.$reason.'停止邦保养服务,您可以'.$content;
+        $con = '【'.$company.'】'.'因,【'.$reason.'】停止邦保养服务，您可以更换到附近其他维修厂。';
+		$shop = Db::table('cs_shop')->where('aid',$aid)->field('id,aid,company,leader,reason')->select();
+		if($shop){
+			foreach ($shop as $k => $v) {
+				$res = $this->smsVerify($v['phone'],$con);
+			}
+			// print_r($re);exit;
+			if($res == "提交成功"){
+				return  $res;
+			}else{
+				return $res;
+			}	
+		}else{
+			return '该运营商旗下没有修车厂';
+		}
+		
+		
+
 	}
 	
 }

@@ -99,14 +99,14 @@ class AgentForward extends Admin
 	 * 提现审核列表
 	 * @return [type] [description]
 	 */
-	public function auditList()
+	public function audit()
 	{
 		// 获取运营商电话
 		$phone = input('post.phone');
 		// 获得运营商id
 		$aid = input('post.aid');
 		// 获取本次提现审核的时间和金额
-		$now = Db::table('ca_apply_cash')->where(['aid'=>$aid,'audit_status'=>0])->field('id,aid,money,sur_amount.create_time')->find();
+		$now = Db::table('ca_apply_cash')->where(['aid'=>$aid,'audit_status'=>0])->field('id,aid,money,sur_amount,create_time')->find();
 
 		$old = Db::table('ca_apply_cash')
 				->where(['aid'=>$aid,'audit_status'=>1])
@@ -127,7 +127,7 @@ class AgentForward extends Admin
 		if($list){
 			$this->result($list,1,'获取列表成功');
 		}else{
-			$this->result('',0,'获取列表失败');
+			$this->result('',0,'暂无数据');
 		}
 
 
@@ -195,6 +195,9 @@ class AgentForward extends Admin
 	{
 		// 获取运营商电话，驳回理由，提现申请时间，订单id，运营商本次提现金额,运营商id
 		$data = input('post.');
+		if(empty($data['reason'])){
+			$this->result('',0,'驳回理由不能为空');
+		}
 		Db::startTrans();
 		// 获取管理员名称
 		$audit_person = Db::table('am_auth_user')->where('id',$this->admin_id)->value('name');
@@ -232,6 +235,23 @@ class AgentForward extends Admin
 			$this->result('',0,'修改状态成功');
 		}
 
+	}
+
+
+
+	/**
+	 * 点击驳回理由显示内容
+	 * @return [type] [description]
+	 */
+	public function forReason()
+	{
+		$id = input('post.id');
+		$reason = $this->reason($id,'ca_apply_cash','reason');
+		if($reason){
+			$this->result($reason,1,'获取理由成功');
+		}else{
+			$this->result('',0,'获取理由失败');
+		}
 	}
 
 	/**

@@ -13,39 +13,50 @@ class ShopCancel extends Agent
 	 */
 	public function agentShop()
 	{
-		$data = input('post.');
 		Db::startTrans();
-		// 发送短信给被取消运营商下面的用户
-		$res = $this->smsCancel($data['sid'],$data['content'],$data['company'],$data['reason']);
-		if($res == ture){
-			// 修改修车厂审核状态shop表
-			if($this->setStatus($data['sid'])){
-				// 增加运营商库存
-				if($this->agentMateriel($data['sid'],$this->aid)){
-					// 增加运营商可开店数量
-					if($this->shopNum($data['sid'],$this->aid)){
-
-						Db::commit();
-						$this->result('',1,'操作成功');
+		// 修改修车厂取消合作表
+		$time = Db::table('cs_apply_cancel')->where('id',$data['id'])->update(['audit_status'=>1,'audit_time'=>time()]);
+		if($time !== false){
+			if($this->shopNum($data['sid'],$this->aid) !== false){	
+				// 让用户换店
+				// 修改修车厂状态为取消合作  4
+				$audit_status = Db::table('cs_shop')->where('id',$data['sid'])->setField('audit_status',4);
+					
+				if($audit_status !== false){
+					// 增加运营商授信库存
+					if($this->agentMateriel($data['sid'],$this->aid) == true){
+						if($this->clearRation($data['sid']) == true){
+							// 给运营商发送短信
+							$res = $this->oilSms($data['sid'],$data['company'],$data['reason']);
+                            if($res == '提交成功'){
+                            	Db::commit();
+								$this->result('',0,'操作成功,请在通过列表查看需要油品详情');
+                            }else{
+                            	Db::rollback();
+								$this->result('',0,$res);
+                            }
+						}else{
+							Db::rollback();
+							$this->result('',0,'清空修车厂库存失败');
+						}
+						
 					}else{
 						Db::rollback();
-						$this->result('',0,'操作失败');
+						$this->result('',0,$this->agentMateriel($data['sid'],$this->aid));
 					}
 
 				}else{
 					Db::rollback();
-					$this->result('',0,'增加运营商库存失败');
+					$this->result('',0,'修改状态失败');
 				}
-
 			}else{
 				Db::rollback();
-				$this->result('',0,'修改修车厂状态失败');
+				$this->result('',0,'增加开通店铺失败');
 			}
-			
 		}else{
 			Db::rollback();
-			$this->result('',0,'发送信息失败');
-		}
+			$this->result('',0,'修改取消合作状态失败');
+		}	
 	}
 
 
@@ -95,101 +106,156 @@ class ShopCancel extends Agent
 
 
 
-
+	/**
+	 * 修车厂取消合作运营商同意，运营商选择给修车厂留油或者让用户换店
+	 * @return [type] [description]
+	 */
 	public function adopt()
 	{
 		// 获取修车厂名称，取消合作理由，状态类型 1更换店铺  2留油到修车厂 修车厂id  取消合作订单id
 		$data = input('post.');
 		Db::startTrans();
-		// 判断是更换店铺还是留油，更换店铺给用户发送短信，留油不用发送短信直接结算
-		if($data['num'] !== 1){
-			 //修改修车厂状态为取消合作继续做邦保养状态
-			 $audit_status = Db::table('cs_shop')->where('id',$data['sid'])->setField('audit_status',6);
-			 if($audit_status !== false){
+		// 修改修车厂取消合作表
+		$time = Db::table('cs_apply_cancel')->where('id',$data['id'])->update(['audit_status'=>1,'audit_time'=>time()]);
+		if($time !== false){
+			if($this->shopNum($data['sid'],$this->aid) !== false){
 
-			 	// 查看汽修厂有多少用户，留多少油到修车厂
-			 	$a = $this->userCar();
-			 	print_r($a);exit;
-			 }else{
-			 	$this->result('',0,'修改状态失败');
-			 }
-			  
+				// 判断是更换店铺还是留油，更换店铺给用户发送短信，留油不用发送短信直接结算
+				if($data['num'] == 2){
+					 //修改修车厂状态为取消合作继续做邦保养状态
+					 $audit_status = Db::table('cs_shop')->where('id',$data['sid'])->setField('audit_status',6);
+					 if($audit_status !== false){
+			 			// 获取修车厂做完邦保养剩余的库存
+					 	// 补充运营商库存
+					 	$inc = $this->userOil($data['sid'],$this->aid,$data['id']);
+					 	if($inc == true){
+					 		Db::commit();
+					 		$this->result('',1,'取消合作成功');
 
-		}else{
+					 	}else{
+					 		Db::rollback();
+					 		$this->result('',0,$inc);
+					 	}
+					 }else{
+					 	Db::rollback();
+					 	$this->result('',0,'修改状态失败');
+					 }
 
-		}
-	}
-
-	/**
-	 * 取消形式修车厂自己把剩下的用户油发送
-	 * @param  [type] $sid [description]
-	 * @param  [type] $aid [description]
-	 * @return [type]      [description]
-	 */
-	public function adopt()
-	{	
-		Db::startTrans();
-		// 获取修车厂名称、取消合作原因、
-		$data=input('post.');
-		$validate = validate('shopCancel');
-		if(!$validate->check($data)){
-			$this->result('',0,$validate->getError());
-		}else{
-			// 修改修车厂审核状态shop表及取消合作表的状态为1
-			if($this->setStatus($data['sid']) == true){
-				// 增加运营商库存
-				if($this->agentMateriel($data['sid'],$this->aid) == true){
-					// 增加运营商可开店数量
-					if($this->shopNum($data['sid'],$this->aid) == true){
-							// 清空取消合作修车厂的库存
+				}else{
+					// 让用户换店
+					// 修改修车厂状态为取消合作  4
+					$audit_status = Db::table('cs_shop')->where('id',$data['sid'])->setField('audit_status',4);
+					
+					if($audit_status !== false){
+						// 增加运营商授信库存
+						if($this->agentMateriel($data['sid'],$this->aid) == true){
 							if($this->clearRation($data['sid']) == true){
-								// 判断运营商选择让用户领油还是换店   1领油  2换店
-								if($data['num'] == 1){
-
-                                    Db::table('u_card')->where('sid',$data['sid'])->setField('remain_times',0);
-                                    $res = $this->oilSms($data['sid'],$data['company'],$data['reason'],$data['content']);
-                                    if($res == '请求成功'){
-                                    	Db::commit();
-										$this->result('',0,'操作成功,请在通过列表查看需要油品详情');
-                                    }else{
-                                    	Db::rollback();
-										$this->result('',0,$res);
-                                    }
-
+								// 给运营商发送短信
+								$res = $this->oilSms($data['sid'],$data['company'],$data['reason']);
+                                if($res == '提交成功'  && $res == '该修车厂没有用户'){
+                                	Db::commit();
+									$this->result('',0,'操作成功,请在通过列表查看需要油品详情');
                                 }else{
-                                	$res = $this->oilSms($data['sid'],$data['company'],$data['reason']);
-                                    if($res == '请求成功'){
-                                    	Db::commit();
-										$this->result('',0,'操作成功,请在通过列表查看需要油品详情');
-                                    }else{
-                                    	Db::rollback();
-										$this->result('',0,$res);
-                                    }
-                                }	
+                                	Db::rollback();
+									$this->result('',0,$res);
+                                }
 							}else{
 								Db::rollback();
-								$this->result('',0,'操作失败');
+								$this->result('',0,'清空修车厂库存失败');
 							}
+							
+						}else{
+							Db::rollback();
+							$this->result('',0,$this->agentMateriel($data['sid'],$this->aid));
+						}
+
 					}else{
 						Db::rollback();
-						$this->result('',0,'增加可开店数量失败');
+						$this->result('',0,'修改状态失败');
 					}
-				}else{
-					Db::rollback();
-					$this->result('',0,'增加库存失败');
+
 				}
 
 			}else{
 				Db::rollback();
-				$this->result('',0,'修改状态失败');
+				$this->result('',0,'增加修车厂开店数量失败');
 			}
-			
-			
+		}else{
+			Db::rollback();
+			$this->result('',0,'修改取消状态失败');
+		}
+	}
+
+
+	
+	/**
+	 * 继续做邦保养，获取修车厂把做邦保养的油留在店里还剩多少库存
+	 * @param  [type] $sid [description]修车厂id
+	 * @param  [type] $aid [description]运营商id
+	 * @param  [type] $id  [description]取消合作订单id
+	 * @return [type]      [description]
+	 */
+	public function userOil($sid,$aid,$id)
+	{
+		$ration = $this->shopRation($sid);
+		$user = $this->userCar($sid);
+		foreach ($ration as $k => $v) {
+			foreach ($user as $key => $value) {
+				if($value['oil'] == $v['materiel']){
+
+					// 需要交接的物料=现有物料-用户做邦保养需要的物料
+					$ration[$k]['stock'] = $v['stock']-$value['remain_times']*$value['litre'];
+				}
+				
+			}
+		}
+		// 获取物料名称和物料数量
+		foreach ($ration as $ke => $valu) {
+			$data[$ke]=['name'=>$valu['name'],'stock'=>$valu['stock']];
 		}
 		
+		$arr= ['detail'=>$data];
+		// 把运营商需要回收的物料已json形式修改到修理厂取消合作表
+		$shop_cancel = Db::table('cs_apply_cancel')->json(['detail'])->where('sid',$sid)->update($arr);
+
+		if($shop_cancel !== false){
+
+			foreach ($ration as $kk => $va) {
+				// where 条件   运营商id  物料种类id
+				$where=['aid'=>$aid,'materiel'=>$va['materiel']];
+				// 获取修车厂配给相差数量
+				$materiel_stock = $va['ration']-$va['stock'];
+				// 增加授信库
+				$res = Db::table('ca_ration')->where($where)->inc('open_stock',$va['stock']+$materiel_stock)->update();
+				// 减少补给库数量补充给授信库
+				$result = Db::table('ca_ration')->where($where)->dec('materiel_stock',$materiel_stock)->update();
+				
+			}
+			if($result !== false){
+					
+					$r = Db::table('cs_ration')->where('sid',$sid)->setField('stock',0);
+					// 获取用户需要做邦保养用油
+					foreach ($user as $kkk => $vvv) {
+						
+						// 把
+						$re = Db::table('cs_ration')->where(['sid'=>$sid,'materiel'=>$vvv['oil']])->setField('stock',$vvv['remain_times']*$vvv['litre']);
+					}
+
+					if($re !== false){
+						return true;
+					}else{
+						return '修改修车厂库存失败';
+					}
+			}else{
+				return '减少运营商补给库失败';
+			}
+		}else{
+			return '物料交接单错误';
+		}
 		
 
-	// }
+	}
+
 
 	/**
 	 * 审核通过列表详情
@@ -206,23 +272,6 @@ class ShopCancel extends Agent
 
 
 	/**
-	 * 修改修车厂审核状态为取消合作
-	 * @param [type] $sid [修车厂id]
-	 */
-	private function setStatus($sid)
-	{
-		$res = Db::table('cs_shop')->where('id',$sid)->setField('audit_status',4);
-		if($res !== false){
-			// 修改取消合作表审核时间
-			$re = Db::table('cs_apply_cancel')->where('id',$sid)->update(['audit_time'=>time(),'audit_status'=>1]);
-			if($re !== false){
-				return true;
-			}
-		}
-	}
-
-
-	/**
 	 * 减少运营商补货库存
 	 * @param  [type] $aid [description]
 	 * @return [type]      [description]
@@ -235,17 +284,25 @@ class ShopCancel extends Agent
 			// 运营商减少补货库存（给授信库增加）
 			$materiel_stock=$v['ration']-$v['stock'];
 			// 增加授信库
-			Db::table('ca_ration')->where($where)->inc('open_stock',$v['stock']+$materiel_stock)->update();
+			$open = Db::table('ca_ration')->where($where)->inc('open_stock',$v['stock']+$materiel_stock)->update();
 			// 减少补给库数量补充给授信库
-			Db::table('ca_ration')->where($where)->dec('materiel_stock',$materiel_stock)->update();
-			
+			$res = Db::table('ca_ration')->where($where)->dec('materiel_stock',$materiel_stock)->update();
 		}
-		// 把运营商与修车厂需要交接的物料表入库到取消合作表
-		if($this->shopOil($sid) == true){
-			return true;
+
+		if($res !== false){
+			// 把运营商和修车厂需要交接的物料插入到修车厂取消合作表
+			foreach ($data as $key => $value) {
+				$data[$key]=['name'=>$value['name'],'stock'=>$value['stock']];
+			}
+			$arr=['detail'=>$data];
+			$res = Db::table('cs_apply_cancel')->json(['detail'])->where('sid',$sid)->update($arr);
+			if($res !== false){
+				return true;
+			}	
+		}else{
+			return '减少补给库失败';
 		}
-		
-		
+
 	}
 
 
@@ -268,10 +325,10 @@ class ShopCancel extends Agent
 	 * @param  [type] $content [description]
 	 * @return [type]          [description]
 	 */
-	public function oilSms($sid,$company,$reason,$content)
+	public function oilSms($sid,$company,$reason)
 	{	
 		// $con=$company.'因'.$reason.'停止邦保养服务,您可以'.$content;
-        $con = '【'.$company.'】'.'因,【'.$reason.'】停止邦保养服务,您可以更换到附近其他维修厂';
+        $con = '【'.$company.'】'.'因,【'.$reason.'】停止邦保养服务，您可以更换到附近其他维修厂。';
 		$user_data=$this->userCar($sid);
 		if($user_data){
 			foreach ($user_data as $k => $v) {
@@ -347,7 +404,7 @@ class ShopCancel extends Agent
 		if(empty($arr)){
 			return true;
 		};
-		$num = $arr['ration']/$arr['warning'];
+		$num = $arr['ration']/72;
 		$res = Db::table('ca_agent')
 		->where('aid',$aid)
 		->inc('shop_nums',$num)
@@ -357,28 +414,6 @@ class ShopCancel extends Agent
 			return true;
 		}
 		
-	}
-
-	
-
-	/**
-	 * 把运营商与修车厂需要交接的表入库到取消合作表
-	 * @param  [type] $sid [description]
-	 * @return [type]      [description]
-	 */
-	public function shopOil($sid)
-	{
-		$data=$this->shopRation($sid);
-
-		foreach ($data as $key => $value) {
-			$data[$key]=['name'=>$value['name'],'stock'=>$value['stock']];
-		}
-
-		$arr=['detail'=>$data];
-		$res = Db::table('cs_apply_cancel')->json(['detail'])->where('sid',$sid)->update($arr);
-		if($res !== false){
-			return true;
-		}
 	}
 
 
