@@ -46,18 +46,18 @@ class FundExpend extends Admin
 	{
 		$page = input('post.page')? : 1;
 		$pageSize = 10;
-		$count = Db::table('u_balance')->count();
+		$count = Db::table('u_share_income')->count();
 		$rows = ceil($count / $pageSize);
-		$list = Db::table('u_balance')
+		$list = Db::table('u_share_income')
 		        ->alias('b')
 		        ->join('u_user u','b.uid = u.id')
 		        ->order('b.create_time desc')
 		        ->page($page,$pageSize)
-		        ->field('u.name as introducer,u.phone as introducer_phone,buyer,money,b.create_time,b.share_balance')
+		        ->field('u.name as introducer,u.phone as introducer_phone,buyer,money,b.create_time,b.reward')
 		        ->select();
-		$amount = 0;//汽修厂提现总金额
+		$amount = 0;//
 		foreach ($list as $key => $value) {
-			$amount = $amount + $value['share_balance'];
+			$amount = $amount + $value['reward'];
 		}
 		if($count > 0){
             $this->result(['list'=>$list,'amount'=>$amount,'rows'=>$rows],1,'获取列表成功');
