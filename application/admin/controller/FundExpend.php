@@ -55,7 +55,7 @@ class FundExpend extends Admin
 		        ->page($page,$pageSize)
 		        ->field('u.name as introducer,u.phone as introducer_phone,buyer,money,b.create_time,b.reward')
 		        ->select();
-		$amount = 0;//
+		$amount = 0;//总的车主转发奖励
 		foreach ($list as $key => $value) {
 			$amount = $amount + $value['reward'];
 		}
