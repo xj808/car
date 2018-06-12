@@ -40,7 +40,7 @@ class AgentCancel extends Admin
 		$list = Db::table('ca_apply_cancel ac')
 				->join('ca_agent ca','ac.aid=ca.aid')
 				->where('id',$id)
-				->field('id,ac.company,phone,open_shop,balance,count_down,reason')
+				->field('id,ac.company,phone,open_shop,balance,ac.audit_time,reason')
 				->find();
 
 		if($list){
@@ -174,6 +174,27 @@ class AgentCancel extends Admin
 
 
 	/**
+	 * 取消合作驳回
+	 * @return [type] [description]
+	 */
+	public function reject()
+	{
+		// 获取运营商id  取消合作列表id  驳回理由
+		$data = input('post.');
+		//修改取消合作表的驳回理由和驳回时间
+		if($data['rej_reason']){
+			$res = Db::table('ca_apply_cancel')->where('id',$data['id'])->update(['audit_time'=>time(),'rej_reason'=>$data['rej_reason']]);
+			if($res !== false){
+				$this->result('',1,'驳回成功');
+			}else{
+				$this->result('',0,'驳回理由不能为空');
+			}
+		}else{
+			$this->result('',0,'驳回理由不能为空');
+		}
+	}
+
+	/**
 	 * 获取修车厂除去需要做邦保养的油剩余的油是多少;
 	 * @param  [type] $data [description]
 	 * @return [type]       [description]
@@ -215,7 +236,7 @@ class AgentCancel extends Admin
 
 
 
-	public function shopRation($data)
+	private function shopRation($data)
 	{
 		foreach ($data as $k => $v) {
 			$list = Db::table('cs_ration')->where('sid',$v['id'])->select();
@@ -238,11 +259,11 @@ class AgentCancel extends Admin
 	private function index($page,$status)
 	{
 		$pageSize = 10;
-		$count = Db::table('ca_apply_cancel')->where('audit_status',$status)->count();
+		$count = Db::table('ca_apply_cancel ac')->where('status',$status)->count();
 		$rows = ceil($count / $pageSize);
 		$list = Db::table('ca_apply_cancel ac')
 				->join('ca_agent ca','ac.aid=ca.aid')
-				->where('ac.audit_status',$status)
+				->where('ac.status',$status)
 				->order('id desc')
 				->field('id,ac.aid,ac.company,ac.leader,phone,ac.create_time,ac.audit_time')
 				->select();
@@ -251,8 +272,8 @@ class AgentCancel extends Admin
 		}else{
 			$this->result('',0,'暂无数据');
 		}
-	}
-
+	
+}
 
 	/**
 	 * 发送短信给修车厂
@@ -279,8 +300,9 @@ class AgentCancel extends Admin
 			return '该运营商旗下没有修车厂';
 		}
 		
-		
-
 	}
+
+
+
 	
 }

@@ -26,15 +26,16 @@ class Msg
 	/**
 	 * 获取当前信息列表
 	 */
-	public function msgList($table,$uid,$page)
+	public function msgList($table,$uid,$page,$rid)
 	{	
-		$pageSize = 1;
+		$pageSize = 10;
 		$count = Db::table($table)->where('uid',$uid)->count();
 		$rows = ceil($count / $pageSize);
 		$list = Db::table($table)
 				->alias('um')
 				->join(['am_msg'=>'am'],'um.mid = am.id')
 				->field('mid,status,title,create_time')
+				->where('sendto','like','%'.$rid)
 				->where('uid',$uid)
 				->order('um.mid desc')
 				->page($page,$pageSize)->select();
@@ -45,9 +46,9 @@ class Msg
 	/**
 	 * 获取当前信息已读未读列表
 	 */
-	public function msgLists($table,$uid,$status,$page)
+	public function msgLists($table,$uid,$status,$page,$rid)
 	{	
-		$pageSize = 1;
+		$pageSize = 10;
 		$count = Db::table($table)->where('uid',$uid)->count();
 		$rows = ceil($count / $pageSize);
 		$where=[['uid','=',$uid],['status','=',$status]];
@@ -55,6 +56,7 @@ class Msg
 				->alias('um')
 				->join(['am_msg'=>'am'],'um.mid = am.id')
 				->field('mid,status,title,content,create_time')
+				->where('sendto','like','%'.$rid)
 				->where($where)
 				->order('um.mid desc')
 				->page($page,$pageSize)->select();

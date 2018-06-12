@@ -19,9 +19,10 @@ class Complaint extends Agent
 		$count = Db::table('u_complain')->where('aid',$this->aid)->count();
 		$rows = ceil($count / $pageSize);
 		$list = Db::table('u_complain uc')
+				->join('cs_shop ss','uc.sid = ss.id')
 				->join('u_user uu','uc.uid = uu.id')
 				->where('uc.aid',$this->aid)
-				->field('uc.id,company,name,uu.phone,title,uc.create_time')
+				->field('uc.id,company,name,uu.phone,content,uc.create_time')
 				->order('id desc')->page($page,$pageSize)->select();
 		if($count > 0){                   
 			$this->result(['list'=>$list,'rows'=>$rows],1,'获取成功');
@@ -39,6 +40,7 @@ class Complaint extends Agent
 	{
 		$id=input('post.id');
 		return Db::table('u_complain uc')
+			->join('cs_shop ss','uc.sid = ss.id')
 			->join('u_user uu','uc.uid = uu.id')
 			->where('uc.id',$id)
 			->field('company,name,uu.phone,uc.create_time,content')

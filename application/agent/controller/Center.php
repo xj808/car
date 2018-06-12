@@ -261,7 +261,7 @@ class Center extends Agent{
 		// 生成四位验证码
         $code=$this->apiVerify();
 
-		$content="您的验证码是：【".$code."】。请不要把验证码泄露给其他人";
+		$content="您的短信验证码是【".$code."】。您正在通过手机号修改银行账户号，如非本人操作，请忽略该短信。";
 
 		return $this->smsVerify($phone,$content,$code);
 	}
@@ -302,6 +302,29 @@ class Center extends Agent{
 		}
 	}
 
+
+	/**
+	 * 检查运营商是否有上传营业执照，和设置供应地区
+	 * @return [type] [description]
+	 */
+	public function selArea()
+	{
+		// 判断用户有没有上传营业执照
+		$lice = Db::table('ca_agent')->where('aid',$this->aid)->value('license');
+		if($lice){
+			// 查看运营商是否设置地区
+			$count = Db::table('ca_area')->where('aid',$this->aid)->count();
+			if($count > 0){
+				$this->result('',1,'已设置地区');
+			}else{
+				$this->result('',0,'您还未设置地区，请您到个人中心->供应地区->修改 设置您的地区。');
+			}
+		}else{
+			$this->result('',0,'您还未上传营业执照，请您到个人中心上传营业执照。');
+		}
+		
+	}
+
 	/**
 	 * 判断原密码是否正确
 	 * @param  [type] $npass [修改的原密码]
@@ -340,7 +363,7 @@ class Center extends Agent{
 	private function alist($aid){
 		$list=Db::table('ca_agent')
 			->where('aid',$aid)
-			->field('aid,login,company,account,leader,province,city,county,address,phone,open_shop,license,usecost')
+			->field('aid,login,company,account,leader,province,city,county,address,phone,open_shop,license,usecost,shop_nums')
 			->find();
 		return $list;
 	}

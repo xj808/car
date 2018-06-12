@@ -146,7 +146,7 @@ class AgentForward extends Admin
 		// 获取提现信息
 		$order = Db::table('ca_apply_cash')->field('aid,odd_number,account,account_name,bank_code,money,create_time')->where('id',$id)->find();
 		// 获取审核人姓名
-		$audit_person = Db::table('ca_auth_user')->where('id',$this->admin_id)->value('name');
+		$audit_person = Db::table('am_auth_user')->where('id',$this->admin_id)->value('name');
 		// 收取手续费1.5/1000
         $cmms = ($money*15/10000 < 1 ) ? 1 : $money*15/10000;
         $cash = $money - $cmms;
@@ -204,7 +204,7 @@ class AgentForward extends Admin
 		$arr =[
 			'audit_status'=>2,
 			'audit_time'=>time(),
-			'audit_person'=>$data['audit_person'],
+			'audit_person'=>$audit_person,
 		];
 		$res = Db::table('ca_apply_cash')->where('id',$data['id'])->update($arr);
 		if($res !== false){
@@ -215,7 +215,7 @@ class AgentForward extends Admin
 
 				// 给运营商发送短信
 				$tx = '提现';
-				$content = "您于【".$data['create_time']."】的【".$data['tx']."】申请，因【".$data['reason']."】被驳回，请完成修订后重新提交。";
+				$content = "您于【".$data['create_time']."】的【".$tx."】申请，因【".$data['reason']."】被驳回，请完成修订后重新提交。";
 				// print_r($content);exit;
 				$sms = $this->smsVerify($data['phone'],$content);
 				if($sms == '提交成功'){
@@ -253,6 +253,7 @@ class AgentForward extends Admin
 			$this->result('',0,'获取理由失败');
 		}
 	}
+
 
 	/**
 	 * 获取提现列表
