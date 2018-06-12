@@ -51,11 +51,9 @@ class FundExpend extends Admin
 		$list = Db::table('u_balance')
 		        ->alias('b')
 		        ->join('u_user u','b.uid = u.id')
-		        ->join('u_card c','b.cid = c.id')
-		        ->join('u_user a','c.uid = a.id')
-		        ->order('c.sale_time desc')
+		        ->order('b.create_time desc')
 		        ->page($page,$pageSize)
-		        ->field('u.name as introducer,u.phone as introducer_phone,a.name as buyer,c.card_price,c.sale_time,b.share_balance')
+		        ->field('u.name as introducer,u.phone as introducer_phone,buyer,money,b.create_time,b.share_balance')
 		        ->select();
 		$amount = 0;//汽修厂提现总金额
 		foreach ($list as $key => $value) {
