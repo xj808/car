@@ -100,5 +100,4 @@ class SmallInvoice extends Admin
 			$this->result('',0,'操作失败，请重试');
 		}
 	}
-
 }
