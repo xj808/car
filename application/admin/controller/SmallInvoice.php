@@ -67,7 +67,6 @@ class SmallInvoice extends Admin
 
 	/**
 	 * 发票详情
-	 * @return [type] [description]
 	 */
 	public function applyDetails()
 	{
