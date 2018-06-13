@@ -71,6 +71,7 @@ class ShopList extends Admin
 			$this->result('',0,'获取列表失败');
 		}
 	}
+	
 
 	/**
 	 * 临时关闭修车厂操作
@@ -100,6 +101,35 @@ class ShopList extends Admin
 		}else{
 			$this->result('',0,'修改状态失败');
 		}
+	}
+
+	/**
+	 * 点击技师数量显示技师列表
+	 * @return [type] [description]
+	 */
+	public function workerNum()
+	{
+		// 获取修车厂id
+		$sid = input('post.id');
+		$page = input('post.page')? :1;
+		$pageSize = 10;
+		$count = Db::table('m_worker')->where('sid',$sid)->count();
+		$rows = ceil($count / $pageSize);
+		// 获取该修车厂技师列表
+		$list = Db::table('m_worker')
+				->where('sid',$sid)
+				->field('name,phone,server,skill')
+				->order('id desc')
+				->page($page,$pageSize)
+				->select();
+
+		if($count > 0){
+			$this->result($list,1,'获取列表成功');
+		}else{
+			$this->result('',0,'获取列表失败');
+		}
+		
+
 	}
 
 

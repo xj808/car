@@ -91,5 +91,21 @@ class Index extends Agent
 	public function shopNum(){
 		return Db::table('ca_agent')->where('aid',$this->aid)->value('open_shop');
 	}
+
+
+
+	/**
+	 * 判断是否有未读消息
+	 * @return [type] [description]
+	 */
+	public function unreadNum()
+	{
+		$count = Db::table('ca_msg')->where(['aid'=>$this->aid,'status'=>0])->count();
+		if($count > 0){
+			$this->result('',1,'您有未读的消息');
+		}else{
+			$this->result('',0,'没有未读消息');
+		}
+	}
 	
 }

@@ -83,7 +83,7 @@ class FundExpend extends Admin
 		        ->order('c.create_time desc')
 		        ->where('c.audit_status',1)
 		        ->page($page,$pageSize)
-		        ->field('s.company,s.phone,s.leader,c.audit_person,money,c.arrive_time')
+		        ->field('s.company,s.phone,s.leader,c.audit_person,money,c.arrive_time,c.account')
 		        ->select();
 		$amount = 0;//汽修厂提现总金额
 		foreach ($list as $key => $value) {
@@ -112,7 +112,7 @@ class FundExpend extends Admin
 		        ->order('c.create_time desc')
 		        ->where('c.audit_status',1)
 		        ->page($page,$pageSize)
-		        ->field('a.company,a.phone,a.leader,money,c.arrive_time')
+		        ->field('a.company,a.phone,a.leader,money,c.arrive_time,c.account')
 		        ->select();
 		$amount = 0;//运营商提现总金额
 		foreach ($list as $key => $value) {

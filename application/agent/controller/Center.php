@@ -320,7 +320,7 @@ class Center extends Agent{
 				$this->result('',0,'您还未设置地区，请您到个人中心->供应地区->修改 设置您的地区。');
 			}
 		}else{
-			$this->result('',0,'您还未上传营业执照，请您到个人中心上传营业执照。');
+			$this->result('',2,'您还未上传营业执照，请您到个人中心上传营业执照。');
 		}
 		
 	}
@@ -397,25 +397,25 @@ class Center extends Agent{
 	}
 
 
-	/**
-	 * 判断营业执照是否上传您是否已审核
-	 * @return [type] [description]
-	 */
-	public function ifLicense()
-	{
-		$license = Db::table('ca_agent')->where('aid',$this->aid)->value('license');
-		if(empty($license)){
-			// 查看营业执照和系统使用费是否审核通过
-			$status = Db::table('ca_agent')->where('aid',$this->aid)->value('status');
-			if($status == 2){
-				$this->result('',1,'已通过审核');
-			}else{
-				$this->result('',2,'请等待总后台审核');
-			}
-		}else{
-			$this->result('',0,'您还没有上传营业执照');
-		}
-	}
+	// /**
+	//  * 判断营业执照是否上传您是否已审核
+	//  * @return [type] [description]
+	//  */
+	// public function ifLicense()
+	// {
+	// 	$license = Db::table('ca_agent')->where('aid',$this->aid)->value('license');
+	// 	if(empty($license)){
+	// 		// 查看营业执照和系统使用费是否审核通过
+	// 		$status = Db::table('ca_agent')->where('aid',$this->aid)->value('status');
+	// 		if($status == 2){
+	// 			$this->result('',1,'已通过审核');
+	// 		}else{
+	// 			$this->result('',2,'请等待总后台审核');
+	// 		}
+	// 	}else{
+	// 		$this->result('',0,'您还没有上传营业执照');
+	// 	}
+	// }
 
 
 
