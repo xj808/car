@@ -4,6 +4,8 @@ use app\base\controller\Shop;
 use think\Db;
 use think\File;
 use Msg\Sms;
+use Geo\Geo;
+
 /**
 * 个人中心
 */
@@ -14,7 +16,7 @@ class Main extends Shop
 	 */
 	public function initialize()
 	{
-		parent::initialize();
+		// parent::initialize();
 	}
 
 	/**
@@ -186,6 +188,9 @@ class Main extends Shop
 		$data = input('post.');
 		// 检测用户是否存在
 		$count = $this->isExist();
+		// 根据坐标获得hash值
+		$geo = new Geohash();
+		$data['hash_val'] = $geo->encode_hash($data['lat'],$data['lng']);
 		// 如果存在则修改用户信息
 		if($count > 0){
 			$save = Db::table('cs_shop_set')->where('sid',$this->sid)->update($data);
@@ -201,14 +206,12 @@ class Main extends Shop
 	}
 
 
-	
-
 	/**
 	 * 上传图片
 	 */
 	public function uploadImg()
 	{
-		return upload('file','shop/photo','http://192.168.1.120/tp5/public');
+		return upload('file','shop/photo','https://mp.ctbls.com');
 	}
 
 	/**

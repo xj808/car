@@ -118,10 +118,3 @@ function build_order_sn()
 {
     return str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT) . time();
 }
-
-
-
-
-
-
-  

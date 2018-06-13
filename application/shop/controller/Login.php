@@ -37,6 +37,8 @@ class Login extends Shop
 				if(compare_password($data['passwd'],$us['passwd'])){
 					// 生成token作为验证使用
 					$token = $this->token($us['id'],$data['usname']);
+					// 更新运营商
+					$this->setAid($us['id']);
 					// 登录成功返回数据
 					$this->result(['token'=>$token,'audit_status'=>$us['audit_status']],1,'登录成功');
 				}else{
@@ -48,6 +50,20 @@ class Login extends Shop
 		}else{
 			$this->result('',0,$validate->getError());
 		}
+	}
+
+	/**
+	 * 绑定运营商
+	 */
+	public function setAid($sid)
+	{
+		// 获取维修厂所在区域
+		$county_id = Db::table('cs_shop_set')->where('sid',$sid)->value('county_id');
+		// 通过县区id获得运营商的id
+		$aid = Db::table('ca_area')->where('area',$county_id)->value('aid');
+		// 更新运营商id
+		$aid =  $aid ? : 0;
+		Db::table('cs_shop')->where('sid',$sid)->setField('aid',$aid);
 	}
 
 
