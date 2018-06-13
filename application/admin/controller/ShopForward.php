@@ -21,19 +21,19 @@ class ShopForward extends Admin
 
 
 	/**
-	 * 提现通过列表
+	 * 提现驳回列表
 	 * @return [type] [description]
 	 */
 	public function rejectList()
 	{
 		$page = input('post.page')? : 1;
-		$this->index($page,1);
+		$this->index($page,2);
 	}
 
 
 
 	/**
-	 * 提现驳回列表
+	 * 提现通过列表
 	 * @return [type] [description]
 	 */
 	public function adoptList()
@@ -139,6 +139,58 @@ class ShopForward extends Admin
 
 
 	/**
+	 * 提现申请通过
+	 * @param  string $value [description]
+	 * @return [type]        [description]
+	 */
+	public function adopt()
+	{
+		$id = input('post.id');
+		$mobile = input('post.phone');
+		// 获取提现信息
+		$order = Db::table('cs_apply_cash')->field('sid,odd_number,account,account_name,bank_code,money,create_time')->where('id',$id)->find();
+		// 获取审核人姓名
+		$audit_person = Db::table('am_auth_user')->where('id',$this->admin_id)->value('name');
+		// 收取手续费1.5/1000
+        $cmms = ($money*15/10000 < 1 ) ? 1 : $money*15/10000;
+        $cash = $money - $cmms;
+        // 进行提现操作
+        $epay = new Epay();
+        $res = $epay->toBank($order['odd_number'],$order['account'],$order['account_name'],$order['bank_code'],$order['money'],$order['account_namec'].'测试提现');
+        // 提现成功后操作
+        if($res['return_code']=='SUCCESS' && $res['result_code']=='SUCCESS'){
+        	// 更新数据
+        	$arr = [
+				'audit_time' => time(),
+				'audit_person' => $audit_person,
+				'audit_status' => 1,
+				'wx_cmms' => $cmms,
+	            'cmms_amt' => $res['cmms_amt']/100
+			];
+			$save = Db::table('ca_apply_cash')->where('id',$id)->update($arr);
+			if($save !== false){
+				// 处理短信参数
+				$time = $order['create_time'];
+				$money = $order['money'];
+	        	// 发送短信给运营商
+	        	$content = "您于【{$time}】提交的【{$money}】元的提现申请，通过审核，24小时内托管银行支付到账（节假日顺延）！";
+	        	$send = $this->sms->send_code($mobile,$content);
+				$this->result('',1,'处理成功');
+			}else{
+				// 进行异常处理
+				$errData = ['apply_id'=>$id,'apply_cate'=>1,'audit_person'=>$audit_person];
+				Db::table('am_apply_cash_error')->insert($errData);
+				$this->result('',0,'打款成功，处理异常，请联系技术部');
+			}
+        }else{
+        	// 返回错误信息
+        	$this->result('',0,$res['err_code_des']);
+        }
+	}
+
+
+
+	/**
 	 * 提现申请驳回操作
 	 * @return [type] [description]
 	 */
@@ -152,14 +204,14 @@ class ShopForward extends Admin
 		$arr = [
 			'audit_status'=>2,
 			'reason'=>$data['reason'],
-			'audit_person'=>$data['audit_person'],
+			'audit_person'=>$audit_person,
 		];
 		// 修改数据库状态为已驳回，修改驳回理由，修改处理人
 		$res = Db::table('cs_apply_cash')->where('id',$data['id'])->update($arr);
 		if($res !== false){
 
 			// 驳回成功把运营商的余额增加
-			$result = Db::table('cs_shop')->where('sid',$data['sid'])->inc('balance',$data['money'])->update();
+			$result = Db::table('cs_shop')->where('id',$data['sid'])->inc('balance',$data['money'])->update();
 
 			if($result !== false){
 				// 给运营商发送短信
@@ -195,7 +247,7 @@ class ShopForward extends Admin
 	public function shopReason()
 	{
 		$id = input('post.id');
-		$reason = $this->reason($id,'cs_apply_cancel','reason');
+		$reason = $this->reason($id,'cs_apply_cash','reason');
 		if($reason){
 			$this->result($reason,1,'获取理由成功');
 		}else{
@@ -244,7 +296,7 @@ class ShopForward extends Admin
 				->join('cs_shop cs','ac.sid = cs.id')
 				->where('ac.audit_status',$status)
 				->order('ac.id desc')
-				->field('ac.sid,ac.id,company,leader,phone,moeny,ac.create_time,ac.audit_time')
+				->field('ac.sid,ac.id,company,leader,phone,money,ac.create_time,ac.audit_time')
 				->page($page,$pageSize)
 				->select();
 		if($count > 0){

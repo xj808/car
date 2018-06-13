@@ -85,7 +85,11 @@ class ShopRation extends Agent
 		$arr=$this->bangCate();
 		foreach ($arr as $k => $v) {
 			$where=[['sid','=',$sid],['materiel','=',$v['id']]];
-			$res=Db::table('cs_ration')->where($where)->inc(['stock'=>$v['def_num'],'ration'=>$v['def_num']])->update();
+			$res=Db::table('cs_ration')
+				->where($where)
+				->inc('stock',$v['def_num'])
+				->inc('ration',$v['def_num'])
+				->update();
 		}
 		if($res !== false){
 			return true;

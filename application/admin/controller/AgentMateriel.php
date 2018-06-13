@@ -73,10 +73,9 @@ class AgentMateriel extends Admin
 		$id = input('post.id');
 		$aid = input('post.aid');
 		Db::startTrans();
-		$audit_person = Db::table('ca_auth_user')->where('id',$this->admin_id)->value('name');
+		$audit_person = Db::table('am_auth_user')->where('id',$this->admin_id)->value('name');
 		$data=[
 			'audit_status'=>2,
-			'reason'=>$reason,
 			'audit_person'=>$audit_person,
 			'audit_time'=>time(),
 		];
@@ -86,6 +85,9 @@ class AgentMateriel extends Admin
 		if($res == true){
 			// 获取运营商所申请的物料
 			$list = $this->matNum($id);
+			if(empty($list)){
+				$this->result('',0,'您没有申请物料');
+			}
 			// 把物料循环加入到运营商库存里
 			foreach($list as $k=>$v){
 				$res = Db::table('ca_ration')
@@ -117,7 +119,7 @@ class AgentMateriel extends Admin
 	{
 		$id =input('post.id');
 		$reason = input('post.reason');
-		$audit_person = Db::table('ca_auth_user')->where('id',$this->admin_id)->value('name');
+		$audit_person = Db::table('am_auth_user')->where('id',$this->admin_id)->value('name');
 		$data=[
 			'audit_status'=>2,
 			'reason'=>$reason,
@@ -125,7 +127,7 @@ class AgentMateriel extends Admin
 			'audit_time'=>time(),
 		];
 		$result = Db::table('ca_apply_materiel')->where('id',$id)->update($data);
-		if($res !== false){
+		if($result !== false){
 			$this->result('',1,'驳回成功');
 		}else{
 			$this->result('',1,'驳回失败');
@@ -160,7 +162,7 @@ class AgentMateriel extends Admin
 	public function matReason()
 	{
 		$id = input('post.id');
-		$reason = $this->reason($id,'ca_apply_materiel','reason')
+		$reason = $this->reason($id,'ca_apply_materiel','reason');
 		if($reason){
 			$this->result($reason,1,'获取理由成功');
 		}else{

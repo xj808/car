@@ -52,12 +52,12 @@ class AgentIncRation extends Admin
 			$detail = Db::table('ca_increase ci')
 					->join('ca_agent ca','ci.aid = ca.aid')
 					->where(['ci.aid'=>$aid,'id'=>$id])
-					->field('ci.id,ci.aid,voucher,company,phone,regions,price')
+					->field('ci.id,ci.aid,voucher,company,phone,ci.regions,price')
 					->find();
 			if($detail){
 				$this->result($detail,1,'获取数据成功');
 			}else{
-				$this->result($detail,0,'获取数据成功');
+				$this->result('',0,'获取数据失败');
 			}
 		}
 
@@ -89,17 +89,17 @@ class AgentIncRation extends Admin
 		 */
 		public function adopt()
 		{	
-			// 获取该配给的订单id、运营商id、区域个数
+			// 获取该配给的订单id、运营商id、区域个数,本次押金
 			$data = input('post.');
 			Db::startTrans();
 			// 给运营商添加库存，配给
-			if($this->agentRation($data['id'],$data['aid'],$data['regions'])){
+			if($this->agentRation($data['id'],$data['aid'],$data['regions'],$data['price'])){
 				// 修改提高配给订单的审核为已审核 和审核时间
 				$res = Db::table('ca_increase')->where('id',$data['id'])->setField(['audit_status'=>1,'audit_time'=>time()]);
 				if($res !== false){
-					
-					Db::commit();
-					$this->result('',1,'操作成功操作');
+
+						Db::commit();
+						$this->result('',1,'操作成功操作');
 				}else{
 					Db::rollback();
 					$this->result('',0,'操作失败');
@@ -124,6 +124,7 @@ class AgentIncRation extends Admin
 			// 删除运营商所选地区
 			$area = $this->delArea($data['id'],$data['aid']);
 			$res = Db::table('ca_area')->whereIn('area',$area)->delete();
+
 			if($res){
 
 				$result = Db::table('ca_increase')->where('id',$data['id'])->setField('audit_status',2);
@@ -158,7 +159,7 @@ class AgentIncRation extends Admin
 			$list = Db::table('ca_increase ci')
 					->join('ca_agent ca','ci.aid = ca.aid')
 					->where(['audit_status'=>$status])
-					->field('id,ci.aid,company,phone,price,regions')
+					->field('id,ci.aid,company,phone,price,ci.regions,leader,ci.create_time,ci.audit_time')
 					->order('id desc')
 					->page($page,$pageSize)
 					->select();
@@ -178,7 +179,7 @@ class AgentIncRation extends Admin
 		 * @param  [type] $region [description]
 		 * @return [type]         [description]
 		 */
-		private function agentRation($id,$aid,$region)
+		private function agentRation($id,$aid,$region,$deposit)
 		{
 			$count = Db::table('ca_ration')->where('aid',$aid)->count();
 			// 判断是第一次配给还是提高配给
@@ -196,11 +197,20 @@ class AgentIncRation extends Admin
 			}else{
 
 				// 如果小于等于0则表示第一次配给运营商库存插入数据 
-				$arr = $this->firstData($aid,$region);
+				$arr = $this->firstData($aid,$deposit);
 				$res = Db::table('ca_ration')->insertAll($arr);
 			}
-			if($res !== false){
-				return true;
+			if($res){
+				//把运营商此次的支付金额和可开通修车厂数量增加到运营商表
+				$result = Db::table('ca_agent')
+						->where('aid',$aid)
+						->inc('shop_nums',$deposit/7000)
+						->inc('deposit',$deposit)
+						->inc('regions',$region)
+						->update();
+				if($result !== false){
+					return true;
+				}
 			}
 			
 
@@ -213,16 +223,16 @@ class AgentIncRation extends Admin
 		 * 第一次配给所用数组
 		 * @return [type] [description]
 		 */
-		private function firstData($aid,$region)
+		private function firstData($aid,$deposit)
 		{
 			foreach ($this->bangCate() as $k => $v) {
 					$arr[]=[
 						'aid'=>$aid,
 						'materiel'=>$v['id'],
-						'ration'=>$v['def_num']*$region,
-						'warning'=>ceil($v['def_num']*$region*20/100),
-						'materiel_stock'=>$v['def_num']*$region,
-						'open_stock'=>$v['def_num']*$region,
+						'ration'=>$v['def_num']*$deposit/7000,
+						'warning'=>ceil($v['def_num']*$deposit*20/100/7000),
+						'materiel_stock'=>$v['def_num']*$deposit/7000,
+						'open_stock'=>$v['def_num']*$deposit/7000,
 					];
 			}
 			return $arr;
@@ -230,24 +240,24 @@ class AgentIncRation extends Admin
 		}
 
 
-		/**
-		 * 提高配给所用数组
-		 * @return [type] [description]
-		 */
-		private function IncData($region)
-		{
-			foreach ($this->bangCate() as $k => $v) {
-					$arr[]=[
+		// /**
+		//  * 提高配给所用数组
+		//  * @return [type] [description]
+		//  */
+		// private function IncData($deposit)
+		// {
+		// 	foreach ($this->bangCate() as $k => $v) {
+		// 			$arr[]=[
 						
-						'materiel'=>$v['id'],
-						'ration'=>$v['def_num']*$region,
-						'materiel_stock'=>$v['def_num']*$region,
-						'open_stock'=>$v['def_num']*$region,
-					];
-			}
-			return $arr;
+		// 				'materiel'=>$v['id'],
+		// 				'ration'=>$v['def_num']*$region,
+		// 				'materiel_stock'=>$v['def_num']*$region,
+		// 				'open_stock'=>$v['def_num']*$region,
+		// 			];
+		// 	}
+		// 	return $arr;
 
-		}
+		// }
 
 
 		/**
@@ -263,7 +273,7 @@ class AgentIncRation extends Admin
 			$area = explode(',',$area);
 			// 查询该运营商地区表里有没有这次选择的地区，有删除，没有返回true;
 			$area_id = Db::table('ca_area')->where('aid',$aid)->column('area');
-			// 比较两个数组的值获取想的值
+			// 比较两个数组的值获取相同的值
 			$are = array_intersect($area,$area_id);
 			return $are;
 

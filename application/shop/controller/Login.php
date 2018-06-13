@@ -132,9 +132,5 @@ class Login extends Shop
         return $JWT;
     }
 
-    public function test()
-    {
-    	return Db::table('cs_shop')->select();
-    }
 
 }

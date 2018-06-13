@@ -83,7 +83,7 @@ class ShopAudit extends Agent
 		// 判断运营商的可开通数量
 		if(Db::table('ca_agent')->where('aid',$this->aid)->value('shop_nums') <= 0){
 			Db::rollback();
-			$this->result('',0,'您可开通修理厂数量为0,请提高您的可开通修理厂数量');
+			$this->result('',0,'您可开通修理厂数量为零,请您先去个人中心:供应地区（修改）,增加您所管辖的地区');
 		}
 
 		// 运营商授信库存减少一组,可开通修车厂名额减少一个，已开通修车厂数量增加一个

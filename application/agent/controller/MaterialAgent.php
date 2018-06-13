@@ -20,7 +20,7 @@ class MaterialAgent extends Agent
 		$rows = ceil($count / $pageSize);
 		$list = Db::table('ca_ration ar')
 				->join('co_bang_cate bc','ar.materiel=bc.id')
-				->field('name,materiel_stock')
+				->field('name,materiel_stock,open_stock')
 				->where('aid',$this->aid)
 				->order('id desc')->page($page,$pageSize)->select();
 
@@ -121,7 +121,7 @@ class MaterialAgent extends Agent
 			$arr[]=['materiel_id'=>$v,'materiel'=>$data['materiel'][$k],'num'=>$data['num'][$k],'remarks'=>$data['remarks'][$k]];
 		};
 		$ar=[
-			'apply_sn'=>build_order_sn(),
+			'odd_number'=>build_order_sn(),
 			'aid'=>$this->aid,
 			'detail'=>$arr,
 		];

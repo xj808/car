@@ -43,7 +43,7 @@ class AgentAuditList extends Admin
 			if($list){
 				$this->result($list,1,'获取数据成功');
 			}else{
-				$this->result($list,0,'获取数据失败');
+				$this->result($list,0,'暂无数据');
 			}
 
 		}else{
@@ -68,8 +68,9 @@ class AgentAuditList extends Admin
 			// 设置售卡利润、送货延迟罚款、汽修厂工时费、汽修厂成长基金、汽修厂好评奖励
 			$res = Db::table('ca_agent_set')->strict(false)->insert($data);
 			if($res){
-				// 修改运营商的状态为已通过审核状态
-				if($this->setStatus(2,$data['aid']) !== false){
+				// 修改运营商的状态为已通过审核状态,修改审核时间
+				$result = Db::table('ca_agent')->where('aid',$data['aid'])->update(['audit_time'=>time(),'status'=>2]);
+				if($result !== false){
 
 					Db::commit();
 					$this->result('',1,'操作成功');

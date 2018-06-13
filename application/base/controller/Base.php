@@ -88,6 +88,8 @@ class Base extends Controller{
     public function bankCode(){
         return Db::table('co_bank_code')->select();
     }
+
+
     /**
      * 手机发送验证码
      * @param  [type] $phone   [手机号]
@@ -98,6 +100,7 @@ class Base extends Controller{
     {
         return $this->sms->send_code($phone,$content,$code);
     }
+
 
      /**
      * 修改密码发送手机验证码
@@ -111,6 +114,11 @@ class Base extends Controller{
        return  $this->smsVerify($phone,$content,$code);
     }
 
+
+
+
+
+
     /**
      * 获取每组油的升数
      * @return 数组
@@ -119,6 +127,10 @@ class Base extends Controller{
     {   $where=[['pid','>','0'],['def_num','>',0]];
         return Db::table('co_bang_cate')->where($where)->field('id,def_num')->select();
     }
+
+
+
+
 
     /**
      * 修改状态
