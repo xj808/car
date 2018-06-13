@@ -44,7 +44,7 @@ class MessageManage extends Admin
 		$count = Db::table('am_msg')->count();
 		$rows = ceil($count / $pageSize);
 		$list = Db::table('am_msg')
-		        ->order('create_time')
+		        ->order('create_time desc')
 		        ->page($page,$pageSize)
 		        ->field('id,title,create_time')
 		        ->select();

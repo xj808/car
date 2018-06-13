@@ -73,7 +73,7 @@ class SmallInvoice extends Admin
 	{
 		$id = input('post.id');
 		$applyDetails = Db::table('u_tax')
-		        ->field('contacter,phone,company,address,accept_time')
+		        ->field('contacter,phone,company,address,tax_number')
 		        ->where('id',$id)
 		        ->find();
 		return $applyDetails;
