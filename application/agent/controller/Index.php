@@ -34,7 +34,7 @@ class Index extends Agent
 		if($datil){
 			$this->result($datil,1,'获取消息详情成功');
 		}else{
-			$this->result($datil,0,'获取消息详情失败');
+			$this->result('',0,'获取消息详情失败');
 		}
 	}
 
@@ -44,11 +44,11 @@ class Index extends Agent
 	 */
 	public function msgList(){
 		$page = input('post.page') ? : 1;
-		$list=$this->coMsg->msgList($this->msg,$this->aid,$page);
+		$list=$this->coMsg->msgList($this->msg,$this->aid,$page,3);
 		if($list){
 			$this->result($list,1,'获取消息列表成功');
 		}else{
-			$this->result($datil,0,'暂无数据');
+			$this->result('',0,'暂无数据');
 		}
 	}
 
@@ -60,11 +60,11 @@ class Index extends Agent
 	public function unread()
 	{	
 		$page = input('post.page') ? : 1;
-		$list=$this->coMsg->msgLists($this->msg,$this->aid,0,$page);
-		if(!$list){
+		$list=$this->coMsg->msgLists($this->msg,$this->aid,0,$page,3);
+		if($list){
 			$this->result($list,1,'获取未读消息列表成功');
 		}else{
-			$this->result($list,1,'暂无数据');
+			$this->result('',0,'暂无数据');
 		}
 	}
 
@@ -76,11 +76,11 @@ class Index extends Agent
 	public function read()
 	{
 		$page = input('post.page') ? : 1;
-		$list=$this->coMsg->msgLists($this->msg,$this->aid,1,$page);
+		$list=$this->coMsg->msgLists($this->msg,$this->aid,1,$page,3);
 		if($list){
 			$this->result($list,1,'获取已读消息列表成功');
 		}else{
-			$this->result($list,1,'获取已读消息列表成功');
+			$this->result('',0,'获取已读消息列表成功');
 		}
 	}
 

@@ -46,12 +46,12 @@ class Capital extends Agent
 	{	
 		$id=input('post.id');
 		return Db::table('ca_income ci')
-					->join('cs_shop cs','ci.sid=cs.id')
-					->join('co_car_cate cc','cc.id=ci.car_cate_id')
-					->join('u_user uu','ci.uid=uu.id')
-					->field('odd_number,cs.phone,amount,ci.create_time,company,name')
-					->where('ci.id',$id)
-				   ->select();
+				->join('cs_shop cs','ci.sid=cs.id')
+				->join('co_car_cate cc','cc.id=ci.car_cate_id')
+				->join('u_user uu','ci.uid=uu.id')
+				->field('odd_number,cs.phone,amount,ci.create_time,company,name')
+				->where('ci.id',$id)
+				->select();
 	}
 
 
@@ -62,6 +62,7 @@ class Capital extends Agent
 	public function forward()
 	{	
 		$arr = Db::table('ca_agent ca')
+				->where('aid',$this->aid)
 				->field('bank,account,bank_name,balance')
 				->find();
 		if($arr){
@@ -81,36 +82,42 @@ class Capital extends Agent
 		
 		$data=input('post.');
 		Db::startTrans();
-		if(!empty($data['money'])){
-			// 判断运营商余额是否充足
-			if($this->ifMoney($data['money'],$this->aid)){
-				// 减少运营商总金额
-				$result = Db::table('ca_agent')->where('aid',$this->aid)->dec('balance',$data['money'])->update();
-				if($result !== false){
+		// 判断是否填写金额
+		if(empty($data['money'])){
+			Db::rollback();
+			$this->result('',0,'提现金额不能为空');
+		}
+		// 判断运营商余额是否充足
+		$money = $this->ifMoney($data['money'],$this->aid);
+		if($data['money'] > $money){
+			Db::rollback();
+			$this->result('',0,'您本次提现最多为'.$money);
+		}
 
-					$data['odd_number']=build_order_sn();
-					$data['aid']=$this->aid;
-					// 获取运营商现有余额
-					$data['sur_amount'] = Db::table('ca_agent')->where('aid',$this->aid)->value('balance');
-					// 提现申请插入数据库
-					$res=Db::table('ca_apply_cash')->strict(false)->insert($data);
-					if($res){
-						Db::commit();
-						$this->result('',1,'申请成功,请等待审核');
-					}else{
-						Db::rollback();
-						$this->result('',0,'申请成功,请等待审核');
-					}
-				}else{
-					$this->result('',0,'减少运营商余额失败');
-				}
+		if($data['money']%100 !== 0){
+          	Db::rollback();
+			$this->result('',0,'请输入100的整数倍');
+        }
+		// 减少运营商总金额
+		$result = Db::table('ca_agent')->where('aid',$this->aid)->dec('balance',$data['money'])->update();
+		if($result !== false){
 
-				
+			$data['odd_number']=build_order_sn();
+			$data['aid']=$this->aid;
+			// 获取运营商现有余额
+			$data['sur_amount'] = Db::table('ca_agent')->where('aid',$this->aid)->value('balance');
+			// 提现申请插入数据库
+			$res=Db::table('ca_apply_cash')->strict(false)->insert($data);
+			if($res){
+				Db::commit();
+				$this->result('',1,'申请成功,请等待审核');
 			}else{
-				$this->result('',0,'您的余额不足');
+				Db::rollback();
+				$this->result('',0,'申请成功,请等待审核');
 			}
 		}else{
-			$this->result('',0,'提现金额不能为空');
+			Db::rollback();
+			$this->result('',0,'减少运营商余额失败');
 		}
 	}
 
@@ -147,9 +154,8 @@ class Capital extends Agent
 	{
 		// 获取运营商现有所有收入
 		$balance=Db::table('ca_agent')->where('aid',$aid)->value('balance');
-		if($balance>=$money){
-			return true;
-		}
+		$money = $balance - 1000;
+		return $money;
 	}
 
 

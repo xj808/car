@@ -20,7 +20,7 @@ class AgentList extends Admin
 		$rows = ceil($count / $pageSize);
 		$list = Db::table('ca_agent')
 				->where('status',2)
-				->field('aid,company,phone,open_shop,regions,balance,sale_card,service_time')
+				->field('aid,company,leader,phone,open_shop,regions,balance,sale_card,service_time')
 				->order('aid desc')->page($page,$pageSize)
 				->select();
 		if($count > 0){
@@ -55,16 +55,23 @@ class AgentList extends Admin
 	public function shopNum()
 	{
 		$aid = input('post.aid');
+		$page = input('post.page')? :1;
+		$pageSize = 10;
+		$count = Db::table('cs_shop')->where(['aid'=>$aid,'audit_status'=>2])->count();
+		$rows = ceil($count / $pageSize);
 		// 获取该运营商已通过审核正常运行的修车厂列表
 		$shopList = Db::table('cs_shop')
 					->where(['aid'=>$aid,'audit_status'=>2])
 					->field('company,leader,phone,create_time,audit_time')
+					->order('id desc')
+					->page($page,$pageSize)
 					->select();
 		$list = $this->ifNew($shopList);
-		if($list){
-			$this->result($list,1,'获取数据成功');
+
+		if($count > 0){
+			$this->result(['list'=>$list,'rows'=>$rows],1,'获取列表成功');
 		}else{
-			$this->result($list,0,'暂无数据');
+			$this->result('',0,'暂无数据');
 		}
 
 	}

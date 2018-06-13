@@ -85,7 +85,7 @@ class AgentMateriel extends Admin
 		if($res == true){
 			// 获取运营商所申请的物料
 			$list = $this->matNum($id);
-			if($list){
+			if(empty($list)){
 				$this->result('',0,'您没有申请物料');
 			}
 			// 把物料循环加入到运营商库存里
