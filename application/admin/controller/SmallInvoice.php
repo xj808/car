@@ -67,13 +67,12 @@ class SmallInvoice extends Admin
 
 	/**
 	 * 发票详情
-	 * @return [type] [description]
 	 */
 	public function applyDetails()
 	{
 		$id = input('post.id');
 		$applyDetails = Db::table('u_tax')
-		        ->field('contacter,phone,company,address,accept_time')
+		        ->field('contacter,phone,company,address,tax_number')
 		        ->where('id',$id)
 		        ->find();
 		return $applyDetails;

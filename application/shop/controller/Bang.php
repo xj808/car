@@ -78,6 +78,7 @@ class Bang extends Shop
 					->where('plate',$plate)
 					->where('remain_times','>',0)
 					->count();
+		return Db::table('u_card')->select();exit;
 		// 如果该车存在
 		if($count > 0){
 			$info = $this->getCarInfo($plate);
@@ -124,6 +125,7 @@ class Bang extends Shop
 						'order_number' => build_order_sn(),
 						'cid' => $data['cid'],
 						'oil' => $data['oil'],
+						'uid' => $data['uid'],
 						'litre' => $data['litre'],
 						'filter' => $data['filter'],
 						'grow_up' => $rd['shop_fund'],
@@ -196,7 +198,7 @@ class Bang extends Shop
 				->join(['co_car_cate'=>'car'],'c.car_cate_id = car.id')
 				->join(['co_bang_cate'=>'ba'],'c.oil = ba.id')
 				->where('plate',$plate)
-				->field('u.name,u.phone,d.month,d.km,d.filter,d.litre,car.type,c.card_number,c.remain_times,ba.name as oil,c.oil as oid,c.id as cid,c.plate')
+				->field('u.name,u.phone,u.id as uid,d.month,d.km,d.filter,d.litre,car.type,c.card_number,c.remain_times,ba.name as oil,c.oil as oid,c.id as cid,c.plate')
 				->find();
 	}
 }
