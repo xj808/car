@@ -13,7 +13,7 @@ class SmallSlideshow extends Admin
 	 */
 	public function uploadPic()
 	{
-		return upload('image','slideshow','http://localhost/car-dev/public');
+		return upload('image','slideshow','http://192.168.1.110/car/public');
 	}
 
     /**

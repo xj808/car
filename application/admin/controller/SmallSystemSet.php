@@ -33,6 +33,23 @@ class SmallSystemSet extends Admin
 	}
 
 	/**
+	 * 查询已经设置的车主分享的奖励金额
+	 * @return [type] [description]
+	 */
+	public function selectMoney()
+	{
+		$am = Db::table('am_system_setup')
+		         ->where('type',1)
+		         ->field('money,create_person')
+		         ->find();
+		if($am){
+			$this->result(['am'=>$am],1,'获取信息成功');
+		} else {
+			$this->result('',0,'获取信息失败,请先设置');
+		}
+	}
+
+	/**
 	 * 修改车主分享获得的奖励金额
 	 */
 	public function alterMoney()
