@@ -86,23 +86,23 @@ class AgentCancel extends Admin
 				// 获取运营商现有库存，入库到运营商取消合作表
 				$agent_ration =Db::table('ca_ration cr')
 								->join('co_bang_cate bc','cr.materiel = bc.id')
-								->where('aid',$data['aid'])->field('sid,materiel,ration,stock,name')->select();
+								->where('aid',$data['aid'])->field('aid,materiel,materiel_stock,open_stock,name')->select();
 				$arr['detail']=$agent_ration;
 				$result = Db::table('ca_apply_cancel')->json(['detail'])->insert($arr);
 				if($result){
 					//修改运营商为取消合作。
-					$res = Db::table('ca_agent')->where('aid',$data['aid'])->setField('audit_status',6);
+					$res = Db::table('ca_agent')->where('aid',$data['aid'])->setField('status',6);
 					if($res !== false){
 						 // 清除运营商的库存
 						 $clear = Db::table('ca_ration')->where('aid',$data['aid'])->delete();
 						 if($clear){
 						 	// 给修车厂发送短信
-						 	$oilSms = $this->oilSms($aid,$company,$reason);
-						 	if($oilSms == '请求成功' && $oilSms == '该运营商旗下没有修车厂'){
+						 	$oilSms = $this->oilSms($data['aid'],$data['company'],$data['reason']);
+						 	if($oilSms == '请求成功' || $oilSms == '该运营商旗下没有修车厂'){
 						 		Db::commit();
 								$this->result('',1,'取消合作成功');
 						 	}else{
-						 		Db::commit();
+						 		Db::rollback();
 								$this->result('',1,$oilSms);
 						 	}
 						 	
@@ -148,7 +148,8 @@ class AgentCancel extends Admin
 			$res = Db::table('cs_apply_cancel')->insertGetId($arr);
 			$r[]=$res;
 		}
-		if($res !== false){
+		if(isset($r)){
+			//运营商旗下有修车厂
 			// 获取每个修车厂的库存
 			$shop_ration = $this->surRation($shop);
 			foreach ($shop_ration as $k => $v) {
@@ -168,7 +169,8 @@ class AgentCancel extends Admin
 			}
 
 		}else{
-			return '修车厂的取消合作失败';
+			// 运营商旗下没有修车厂
+			return true;
 		}
 	}
 

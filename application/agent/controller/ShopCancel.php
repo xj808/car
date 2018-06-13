@@ -28,7 +28,7 @@ class ShopCancel extends Agent
 						if($this->clearRation($data['sid']) == true){
 							// 给运营商发送短信
 							$res = $this->oilSms($data['sid'],$data['company'],$data['reason']);
-                            if($res == '提交成功'){
+                            if($res == '提交成功'  || $res == '该修车厂没有用户'){
                             	Db::commit();
 								$this->result('',0,'操作成功,请在通过列表查看需要油品详情');
                             }else{
@@ -90,12 +90,12 @@ class ShopCancel extends Agent
 	public function auditStatus($status,$page)
 	{
 		$pageSize = 10;
-		$count = Db::table('cs_apply_cancel')->where(['aid'=>$this->aid])->count();
+		$count = Db::table('cs_apply_cancel')->where(['aid'=>$this->aid,'audit_status'=>$status])->count();
 		$rows = ceil($count / $pageSize);
 		$list = Db::table('cs_apply_cancel cac')
 			->join('cs_shop cs','cs.id=cac.sid')
 			->where(['cac.aid'=>$this->aid,'cac.audit_status'=>$status])
-			->field('cac.id,cac.sid,cac.company,cac.leader,phone,service_num,cac.reason,cac.create_time')
+			->field('cac.id,cac.sid,cac.company,cac.leader,phone,service_num,cac.reason,cac.create_time,cac.audit_time')
 			->order('id desc')->page($page,$pageSize)->select();
 		if($count > 0){
 			$this->result(['list'=>$list,'rows'=>$rows],1,'获取成功');
@@ -112,16 +112,20 @@ class ShopCancel extends Agent
 	 */
 	public function adopt()
 	{
-		// 获取修车厂名称，取消合作理由，状态类型 1更换店铺  2留油到修车厂 修车厂id  取消合作订单id
+		// 获取修车厂名称，取消合作理由，状态类型 1留油到修车厂  2用户换店 修车厂id  取消合作订单id
 		$data = input('post.');
 		Db::startTrans();
+		if(empty($data['reason'])){
+			Db::rollback();
+			$this->result('',0,'取消合作理由不能为空');
+		}
 		// 修改修车厂取消合作表
 		$time = Db::table('cs_apply_cancel')->where('id',$data['id'])->update(['audit_status'=>1,'audit_time'=>time()]);
 		if($time !== false){
 			if($this->shopNum($data['sid'],$this->aid) !== false){
 
 				// 判断是更换店铺还是留油，更换店铺给用户发送短信，留油不用发送短信直接结算
-				if($data['num'] == 2){
+				if($data['num'] == 1){
 					 //修改修车厂状态为取消合作继续做邦保养状态
 					 $audit_status = Db::table('cs_shop')->where('id',$data['sid'])->setField('audit_status',6);
 					 if($audit_status !== false){
@@ -130,7 +134,7 @@ class ShopCancel extends Agent
 					 	$inc = $this->userOil($data['sid'],$this->aid,$data['id']);
 					 	if($inc == true){
 					 		Db::commit();
-					 		$this->result('',1,'取消合作成功');
+					 		$this->result('',1,'取消合作成功,详细的物料交接，请查看：取消合作->取消通过->详情');
 
 					 	}else{
 					 		Db::rollback();
@@ -142,6 +146,7 @@ class ShopCancel extends Agent
 					 }
 
 				}else{
+
 					// 让用户换店
 					// 修改修车厂状态为取消合作  4
 					$audit_status = Db::table('cs_shop')->where('id',$data['sid'])->setField('audit_status',4);
@@ -152,7 +157,7 @@ class ShopCancel extends Agent
 							if($this->clearRation($data['sid']) == true){
 								// 给运营商发送短信
 								$res = $this->oilSms($data['sid'],$data['company'],$data['reason']);
-                                if($res == '提交成功'  && $res == '该修车厂没有用户'){
+                                if($res == '提交成功'  || $res == '该修车厂没有用户'){
                                 	Db::commit();
 									$this->result('',0,'操作成功,请在通过列表查看需要油品详情');
                                 }else{
@@ -213,7 +218,7 @@ class ShopCancel extends Agent
 		foreach ($ration as $ke => $valu) {
 			$data[$ke]=['name'=>$valu['name'],'stock'=>$valu['stock']];
 		}
-		
+
 		$arr= ['detail'=>$data];
 		// 把运营商需要回收的物料已json形式修改到修理厂取消合作表
 		$shop_cancel = Db::table('cs_apply_cancel')->json(['detail'])->where('sid',$sid)->update($arr);
@@ -234,6 +239,10 @@ class ShopCancel extends Agent
 			if($result !== false){
 					
 					$r = Db::table('cs_ration')->where('sid',$sid)->setField('stock',0);
+					// 判断是否有用户
+					if(empty($user)){
+						return true;
+					}
 					// 获取用户需要做邦保养用油
 					foreach ($user as $kkk => $vvv) {
 						
