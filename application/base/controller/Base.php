@@ -21,15 +21,15 @@ class Base extends Controller{
     {
         $token=input('post.token');
         if(!$token || empty($token)){
-            $this->error('token失效或未登录');
+            $this->result('',0,'token失效或未登录');
         }else{
             // 进行分割验证格式
             if (count(explode('.', $token)) != 3) {
-                $this->error('token无效');
+                $this->result('',0,'token无效');
             }
             $id = $this->checkToken($token);
             if(!$id){
-                $this->error('token失效或未登录');
+                $this->result('',0,'token失效或未登录');
             }else{
                 return $id;
             }

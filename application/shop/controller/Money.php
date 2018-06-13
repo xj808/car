@@ -56,12 +56,12 @@ class Money extends Shop
 				->join(['cs_shop_set'=>'st'],'st.sid = sp.id')
 				->join(['co_bank_code'=>'b'],'st.bank = b.code')
 				->field('phone,balance,b.name as bank,account,account_name')
-				->where('sid',$this->sid)
+				->where('sp.id',$this->sid)
 				->find();
 		if($info){
 			$this->result($info,1,'获取数据成功');
 		}else{
-			$this->result('',0,'获取数据成功');
+			$this->result('',0,'获取数据失败');
 		}
 	}
 
@@ -103,15 +103,14 @@ class Money extends Shop
 				// 进行事务提交
 				if($draw_log && $account_dec) {
 					Db::commit();
-					$this->result('',1,'提交失败，请等待审核');
+					$this->result('',1,'提交成功，请等待审核');
 				}else{
 					Db::rollback();
 					$this->result('',0,'提交失败，请重新提交');
 				}
 			}else{
-
+				$this->result('',0,$validate->getError());
 			}
-			
 		}else{
 			$this->result('',0,'手机验证码无效或已过期');
 		}
