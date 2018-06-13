@@ -34,7 +34,6 @@ class SmallSystemSet extends Admin
 
 	/**
 	 * 查询已经设置的车主分享的奖励金额
-	 * @return [type] [description]
 	 */
 	public function selectMoney()
 	{
