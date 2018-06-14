@@ -148,8 +148,8 @@ class AgentForward extends Admin
 		// 获取审核人姓名
 		$audit_person = Db::table('am_auth_user')->where('id',$this->admin_id)->value('name');
 		// 收取手续费1.5/1000
-        $cmms = ($money*15/10000 < 1 ) ? 1 : $money*15/10000;
-        $cash = $money - $cmms;
+        $cmms = ($order['money']*15/10000 < 1 ) ? 1 : $order['money']*15/10000;
+        $cash = $order['money'] - $cmms;
         // 进行提现操作
         $epay = new Epay();
         $res = $epay->toBank($order['odd_number'],$order['account'],$order['account_name'],$order['bank_code'],$order['money'],$order['account_namec'].'测试提现');

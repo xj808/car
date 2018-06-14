@@ -25,7 +25,6 @@ class CancelCoop extends Agent
 
 			$data = $this->aDatil($this->aid);
 			$data['reason'] = $reason;
-			$data['count_down'] = time()+2592000;
 			$data['aid']=$this->aid;
 			if(Db::table('ca_apply_cancel')->json(['region'])->insert($data)){
 				$this->result('',1,'取消合作申请成功,等待总后台审核');

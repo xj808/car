@@ -108,7 +108,7 @@ class AgentAuditList extends Admin
 				// 获取运营商电话
 				$phone = Db::table('ca_agent')->where('aid',$aid)->value('phone');
 				// 编辑短信发送内容
-				$content = '您的申请,因【'.$reason.'】被驳回,请重新注册。';
+				$content = '您的系统开通因【'.$reason.'】被驳回,请完成修订后重新提交。';
 				// 给运营商发送短信告诉他您的开通被驳回
 				$sms = $this->smsVerify($phone,$content);
 				if($sms == '请求成功'){

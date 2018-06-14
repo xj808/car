@@ -44,7 +44,8 @@ class Agent extends Base
 			'area'=>$area,
 			'voucher'=>$voucher,
 			'price'=>$deposit,
-			'aid'=>$aid
+			'aid'=>$aid,
+			'regions'=>count($area)
 		];
 		if($data){
 			if($id == ''){

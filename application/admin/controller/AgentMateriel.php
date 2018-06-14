@@ -75,7 +75,7 @@ class AgentMateriel extends Admin
 		Db::startTrans();
 		$audit_person = Db::table('am_auth_user')->where('id',$this->admin_id)->value('name');
 		$data=[
-			'audit_status'=>2,
+			'audit_status'=>1,
 			'audit_person'=>$audit_person,
 			'audit_time'=>time(),
 		];

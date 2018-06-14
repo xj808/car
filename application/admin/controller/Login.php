@@ -48,6 +48,41 @@ class Login extends Base
 
 
 	/**
+     * 忘记密码
+     * @return json 修改成功或失败
+     */
+    public function forget(){
+        $data=input('post.');
+        $validate=validate('Forget');
+        if($validate->check($data)){
+            if($this->sms->compare($data['phone'],$data['code'])){
+                $res=Db::table('ca_agent')->where('phone',$data['phone'])->setField('pass',get_encrypt($data['pass']));
+                if($res!==false){
+                    $msg=['status'=>1,'msg'=>'修改成功'];
+                }else{
+                    $msg=['status'=>0,'msg'=>'修改失败'];
+                }
+            }else{
+                $msg=['status'=>0,'msg'=>'验证码错误'];
+            }
+        }else{
+            $msg=['status'=>0,'msg'=>$validate->getError()];
+        }
+        return $msg;
+    }
+
+
+	/**
+	 * 忘记密码短信
+	 * @return [type] [description]
+	 */
+	public function pwdApi()
+	{	
+		$phone = input('post.phone');
+		$this->result('',1,$this->forCode($phone));
+	}
+
+	/**
      * @param   用户id
      * @param  用户登录账户
      * @return JWT签名
@@ -57,7 +92,7 @@ class Login extends Base
         $key=create_key();   //
         $token=['id'=>$uid,'login'=>$login];
         $JWT=JWT::encode($token,$key);
-        JWT::$leeway =600;
+        JWT::$leeway =70000;
         return $JWT;
     }
 

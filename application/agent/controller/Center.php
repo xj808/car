@@ -229,8 +229,13 @@ class Center extends Agent{
 		$validate=validate('Account');
 		if($validate->check($data)){
 			if($this->sms->compare($data['phone'],$data['code'])){
-
-				$res=Db::table($this->agent)->where('aid',$this->aid)->update($data);
+				$arr = [
+					'phone'=>$data['phone'],
+					'account'=>$data['account'],
+					'bank_name'=>$data['bank_name'],
+					'branch'=>$data['branch'],
+				];
+				$res=Db::table($this->agent)->where('aid',$this->aid)->update($arr);
 
 				if($res){
 					
