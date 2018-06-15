@@ -4,8 +4,8 @@
  * 企业支付到商户零钱
  */
 namespace pay;
-use pay\WxaData;
-use pay\WxaConfig;
+use Pay\WxaData;
+use Pay\WxaConfig;
 
 class Epay extends WxaData{
 
@@ -95,6 +95,7 @@ class Epay extends WxaData{
             openssl_public_encrypt($chunk, $encryptData, $pu_key,OPENSSL_PKCS1_OAEP_PADDING);   
             $crypto .= $encryptData;
         }
+        print_r(base64_encode($crypto));
         return base64_encode($crypto);
     }
 

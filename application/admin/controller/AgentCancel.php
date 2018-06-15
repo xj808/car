@@ -67,7 +67,7 @@ class AgentCancel extends Admin
 	}
 
 
-/**
+	/**
 	 * 运营商取消合作确认通过
 	 * @return [type] [description]
 	 */
@@ -140,6 +140,7 @@ class AgentCancel extends Admin
 
 
 
+
 	public function shopCancel($aid)
 	{
 		// 获取修车厂信息
@@ -204,55 +205,6 @@ class AgentCancel extends Admin
 	}
 
 
-
-
-	/**
-	 * 获取修车厂除去需要做邦保养的油剩余的油是多少;
-	 * @param  [type] $data [description]
-	 * @return [type]       [description]
-	 */
-	public function surRation($data)
-	{
-		// 获取每个修车厂的所有用户
-		foreach ($data as $k => $v) {
-			 $list = Db::table('u_card uc')
-					->join('u_user uu','uc.uid = uu.id')
-					->join('co_bang_data bd','uc.car_cate_id = bd.cid')
-					->where([['uc.sid','=',$v['id']],['uc.remain_times','>',0]])
-					->field('sid,phone,name,oil_name,litre,plate,uc.oil,remain_times')
-					->select();
-			$user_num[] = $list;
-		}
-		if(!empty($user_num)){
-
-			foreach ($user_num as $ke => $v) {
-				foreach($v as $key=>$value){
-					$arr[] = $value;
-				}
-			}
-
-			// 获取修车厂现有库存，判断留油之后还剩多少库存
-			$ration = $this->shopRation($data);
-			foreach ($ration as $kk => $vv) {
-				foreach($arr as $kkk=>$vvv){
-					if($vv['sid'] == $vvv['sid'] && $vv['materiel'] == $vvv['oil']){
-						// 修改修车厂的库存，为仅做邦保养的库存
-						Db::table('cs_ration')->where('sid',$vvv['sid'])->setField('stock',0);
-						Db::table('cs_ration')->where(['sid'=>$vvv['sid'],'materiel'=>$vvv['remain_times']])->setField('stock',$vvv['remain_times']*$vvv['litre']);
-						$ration[$kk]['stock'] = $vv['stock']-$vvv['remain_times']*$vvv['litre'];
-						
-					}
-				}
-			}
-			
-		}else{
-			$ration = $this->shopRation($data);
-		}
-		return $ration;
-
-		
-	}
-
 	/**
 	 * 货品交接
 	 * @return [type] [description]
@@ -265,11 +217,60 @@ class AgentCancel extends Admin
 				->json(['detail'])
 				->find();
 		if($list){
-			$this->result($list,1,'获取交接详情成功');
+			$this->result($list['detail'],1,'获取交接详情成功');
 		}else{
 			$this->result('',0,'获取交接详情失败');
 		}
 	}
+
+
+	/**
+	 * 获取修车厂除去需要做邦保养的油剩余的油是多少;
+	 * @param  [type] $data [description]
+	 * @return [type]       [description]
+	 */
+	private function surRation($data)
+	{
+		// 获取每个修车厂的所有用户
+		foreach ($data as $k => $v) {
+			 $list = Db::table('u_card uc')
+					->join('u_user uu','uc.uid = uu.id')
+					->join('co_bang_data bd','uc.car_cate_id = bd.cid')
+					->where([['uc.sid','=',$v['id']],['uc.remain_times','>',0]])
+					->field('sid,phone,name,oil_name,litre,plate,uc.oil,remain_times')
+					->select();
+			$user_num[] = $list;
+		}
+		foreach ($user_num as $ke => $v) {
+			foreach($v as $key=>$value){
+				$arr[] = $value;
+			}
+		}
+		$ration = $this->shopRation($data);
+		if(isset($arr)){
+			// 获取修车厂现有库存，判断留油之后还剩多少库存
+			foreach ($ration as $kk => $vv) {
+				foreach($arr as $kkk=>$vvv){
+					if($vv['sid'] == $vvv['sid'] && $vv['materiel'] == $vvv['oil']){
+
+						$ration[$kk]['stock'] = $vv['stock']-$vvv['remain_times']*$vvv['litre'];
+						// 修改修车厂的库存，为仅做邦保养的库存
+						Db::table('cs_ration')->where('sid',$vvv['sid'])->setField('stock',0);
+						Db::table('cs_ration')->where(['sid'=>$vvv['sid'],'materiel'=>$vvv['remain_times']])->setField('stock',$vvv['remain_times']*$vvv['litre']);
+					}
+				}
+			}
+			
+		}else{
+			foreach ($ration as $k => $v) {
+				Db::table('cs_ration')->where('sid',$v['sid'])->setField('stock',0);
+			}
+		}
+		return $ration;
+
+		
+	}
+
 
 
 
@@ -318,7 +319,7 @@ class AgentCancel extends Admin
 	 * @param  [type] $content [description]
 	 * @return [type]          [description]
 	 */
-	public function oilSms($aid,$company,$reason)
+	private function oilSms($aid,$company,$reason)
 	{	
 		// $con=$company.'因'.$reason.'停止邦保养服务,您可以'.$content;
         $con = '【'.$company.'】'.'因,【'.$reason.'】停止邦保养服务，您可以更换到附近其他维修厂。';

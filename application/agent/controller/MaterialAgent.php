@@ -9,12 +9,61 @@ class MaterialAgent extends Agent
 {
 
 	/**
+	 * 物料申请未审核列表
+	 * @return [type] [description]
+	 */
+	public function waitList()
+	{
+		$page = input('post.page')? : 1;
+		$this->apply(0,$page);		
+	}
+
+
+	/**
+	 * 物料申请已通过列表
+	 * @return [type] [description]
+	 */
+	public function auditList()
+	{
+		$page = input('post.page')? : 1;
+		$this->apply(1,$page);		
+	}
+
+
+	/**
+	 * 物料申请驳回列表
+	 * @return [type] [description]
+	 */
+	public function rejectList()
+	{
+		$page = input('post.page')? : 1;
+		$this->apply(2,$page);		
+	}
+
+
+	/**
+	 * 物料申请的物料详情
+	 * @return [type] [description]
+	 */
+	public function applyDetail()
+	{
+		$id = input('post.id');
+		$list = Db::table('ca_apply_materiel')->where('id',$id)->json(['detail'])->find();
+		if($list){
+			$this->result($list['detail'],1,'获取详情成功');
+		}else{
+			$this->result($list['detail'],1,'获取详情失败');
+		}
+
+	}
+
+	/**
 	 * 运营商总库存列表
 	 * @return json  物料名称、物料库存剩余量
 	 */
 	public function index()
 	{
-		$page = input('post.page');
+		$page = input('post.page')? : 1;
 		$pageSize = 10;
 		$count = Db::table('ca_ration')->where('aid',$this->aid)->count();
 		$rows = ceil($count / $pageSize);
@@ -108,6 +157,24 @@ class MaterialAgent extends Agent
 			return false;
 
 		}
+	}
+
+	public function apply($audit_status,$page)
+	{	
+		$pageSize = 10;
+		$count = Db::table('ca_apply_materiel')->where(['audit_status'=>$audit_status,'aid'=>$this->aid])->count();
+		$rows = ceil($count / $pageSize);
+		$list = Db::table('ca_apply_materiel')
+		->where(['audit_status'=>$audit_status,'aid'=>$this->aid])
+		->field('id,odd_number,create_time,audit_person,audit_time,reason,audit_status')
+		->page($page,$pageSize)
+		->select();
+		if($count > 0){                   
+			$this->result(['list'=>$list,'rows'=>$rows],1,'获取列表成功');
+		}else{
+			$this->result('',0,'暂无数据');
+		}
+
 	}
 
 	/**
