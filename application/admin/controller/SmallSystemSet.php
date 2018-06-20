@@ -18,7 +18,7 @@ class SmallSystemSet extends Admin
 			$data['create_person'] = Db::table('am_auth_user')
 			                         ->where('id',$this->admin_id)
 			                         ->value('name');
-			$data['type'] = 1;
+			$data['type'] = '车主分享奖励金额';
 			$res = Db::table('am_system_setup')
 			       ->strict(false)
 			       ->insert($data);
@@ -38,7 +38,7 @@ class SmallSystemSet extends Admin
 	public function selectMoney()
 	{
 		$am = Db::table('am_system_setup')
-		         ->where('type',1)
+		         ->where('type','车主分享奖励金额')
 		         ->field('money,create_person')
 		         ->find();
 		if($am){
@@ -61,7 +61,7 @@ class SmallSystemSet extends Admin
 			                         ->where('id',$this->admin_id)
 			                         ->value('name');
 			$res = Db::table('am_system_setup')
-			       ->where('type',1)
+			       ->where('type','车主分享奖励金额')
 			       ->update($data);
 			if($res){
 				$this->result('',1,'修改车主分享获得的奖励金额成功');
