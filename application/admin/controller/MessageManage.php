@@ -19,9 +19,10 @@ class MessageManage extends Admin
 			$data['create_person'] = Db::table('am_auth_user')
 			                         ->where('id',$this->admin_id)
 			                         ->value('name');
+			$data['sendto'] = implode(',',$data['sendto']);
 			$res = Db::table('am_msg')
-		       ->strict(false)
-		       ->insert($data);
+			       ->strict(false)
+			       ->insert($data);
 			if($res){
 				  $this->result('',1,'发布系统消息成功');
 			} else {
