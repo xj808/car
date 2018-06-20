@@ -16,7 +16,8 @@ class AgentAuditList extends Admin
 	{
 		$page = input('post.page')? : 1;
 		$pageSize = 10;
-		$count = Db::table('ca_agent')->where('status',0)->count();
+		// 运营商状态为1的时候显示在审核列表，即上传了营业执照之后
+		$count = Db::table('ca_agent')->where('status',1)->count();
 		$rows = ceil($count / $pageSize);
 		$list = Db::table('ca_agent')
 				->where('status',1)

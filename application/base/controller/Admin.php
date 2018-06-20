@@ -46,6 +46,31 @@ class Admin extends Base
 
     }
 
+    /**
+     * 显示本次配给的地区
+     * @param  [type] $id [description]
+     * @return [type]     [description]
+     */
+    public function showRegion($id)
+    {
+        $county = Db::table('ca_increase')->where('id',$id)->value('area');
+        print_r($county);exit;
+        // 市级id转换为字符串
+        $city=$this->areaList($county);
+        // 省级id转换为字符串
+        $province=$this->areaList($city);
+        // 查询所有省市县的数据
+        $list=Db::table('co_china_data')->whereIn('id',$province.','.$city.','.$county)->select();
+        if($list){
+            // 把数据换成树状结构
+            return get_child($list,$list[0]['pid']);
+            
+
+        }else{  
+            return '暂未设置地区';
+        }
+    }
+
 
     /**
      * 把运营商的市县id转换为字符串

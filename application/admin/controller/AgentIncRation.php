@@ -70,13 +70,11 @@ class AgentIncRation extends Admin
 		public function detailArea()
 		{
 			// 获取运营商id
-			$aid = input('post.aid');
-			$list =$this->region($aid);
+			$aid = input('post.id');
+			$list =$this->showRegion($aid);
 			if($list){
 				$this->result($list,1,'获取列表成功');
-
 			}else{	
-
 				$this->result('',0,'暂未设置供应地区');
 			}
 
@@ -97,9 +95,22 @@ class AgentIncRation extends Admin
 				// 修改提高配给订单的审核为已审核 和审核时间
 				$res = Db::table('ca_increase')->where('id',$data['id'])->setField(['audit_status'=>1,'audit_time'=>time()]);
 				if($res !== false){
-
-						Db::commit();
-						$this->result('',1,'操作成功操作');
+						// 获取运营商提高配给的地区id
+						$county = Db::table('ca_increase')->where('id',$data['id'])->value('area');
+						// 将字符串转换维数组
+						$county = explode(',',$county);
+						foreach ($county as $k => $v) {
+							$area[]=['area'=>$v,'aid'=>$this->aid];// 获取运营商所选择的区域
+						}
+						$res=Db::table($this->area)->insertAll($area);
+						if($res){	
+							Db::commit();
+							$this->result('',1,'操作成功操作');
+						}else{
+							Db::rollback();
+							$this->result('',0,'操作失败');
+						}
+						
 				}else{
 					Db::rollback();
 					$this->result('',0,'操作失败');
@@ -141,6 +152,24 @@ class AgentIncRation extends Admin
 				$this->result('',0,'删除失败');
 			}
 		}
+
+
+
+		/**
+		 * 驳回列表   查看驳回理由
+		 * @return [type] [description]
+		 */
+		public function showRea()
+		{
+			$id = input('post.id');
+			$reason = Db::table('ca_increase')->where('id',$id)->value('reason');
+			if($reason){
+				$this->result($reason,1,'获取驳回理由成功');
+			}else{
+				$this->result('',0,'获取驳回理由失败');
+			}
+		}
+
 
 
 
@@ -188,9 +217,9 @@ class AgentIncRation extends Admin
 				foreach ($this->bangCate() as $k => $v) {
 					$res = Db::table('ca_ration')
 						->where(['aid'=>$aid,'materiel'=>$v['id']])
-						->inc('ration',$v['def_num']*$region)
-						->inc('materiel_stock',$v['def_num']*$region)
-						->inc('open_stock',$v['def_num']*$region)
+						->inc('ration',$v['def_num']*$deposit/7000)
+						->inc('materiel_stock',$v['def_num']*$deposit/7000)
+						->inc('open_stock',$v['def_num']*$deposit/7000)
 						->update();
 				}
 

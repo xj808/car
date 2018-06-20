@@ -129,11 +129,11 @@ class Center extends Agent{
 	public function setArea(){
 
 		$data = input('post.');
-		foreach ($data['county'] as $k => $v) {
-			$area[]=['area'=>$v,'aid'=>$this->aid];// 获取运营商所选择的区域
-		}
-		Db::startTrans();
-		$res=Db::table($this->area)->insertAll($area);
+		// foreach ($data['county'] as $k => $v) {
+		// 	$area[]=['area'=>$v,'aid'=>$this->aid];// 获取运营商所选择的区域
+		// }
+		// Db::startTrans();
+		// $res=Db::table($this->area)->insertAll($area);
 		if($res){
 			$ar = array_str($area,'area');
 			//填写总金额，上传支付凭证
@@ -316,7 +316,11 @@ class Center extends Agent{
 	{
 		// 判断用户有没有上传营业执照
 		$lice = Db::table('ca_agent')->where('aid',$this->aid)->value('license');
-		if($lice){
+		if(empty($lice)){
+			$this->result('',2,'您还未上传营业执照，请您到个人中心上传营业执照。');
+		}
+		$status = Db::table('ca_agent')->where('aid',$this->aid)->value('status');
+		if($status == 2 ){
 			// 查看运营商是否设置地区
 			$count = Db::table('ca_area')->where('aid',$this->aid)->count();
 			if($count > 0){
@@ -325,8 +329,10 @@ class Center extends Agent{
 				$this->result('',0,'您还未设置地区，请您到个人中心->供应地区->修改 设置您的地区。');
 			}
 		}else{
-			$this->result('',2,'您还未上传营业执照，请您到个人中心上传营业执照。');
+			$this->result('',3,'您已上传营业执照请等待总后台审核。');
 		}
+
+		
 		
 	}
 
@@ -368,7 +374,7 @@ class Center extends Agent{
 	private function alist($aid){
 		$list=Db::table('ca_agent')
 			->where('aid',$aid)
-			->field('aid,login,company,account,leader,province,city,county,address,phone,open_shop,license,usecost,shop_nums')
+			->field('status,aid,login,company,account,leader,province,city,county,address,phone,open_shop,license,usecost,shop_nums')
 			->find();
 		return $list;
 	}
