@@ -128,7 +128,8 @@ class AgentList extends Admin
 	private function ifNew($data)
 	{
 		foreach ($data as $k => $v) {
-			if($v['audit_time'] >= $this->monthFirst() && $v['audit_time'] <= $this->monthLast()){
+				$audit_time = date('Y-m-d H:i:s',$v['audit_time']);
+			if($audit_time >= $this->monthFirst() && $v['audit_time'] <= $this->monthLast()){
 				$data[$k]['if_new'] = "是";
 			}else{
 				$data[$k]['if_new'] = "否";

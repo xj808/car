@@ -17,11 +17,11 @@ class FundExpend extends Admin
 		//技师姓名，所在维修厂，邦保养卡号，服务时间，获取金额
 		$page = input('post.page')? : 1;
 		$pageSize = 10;
-		$count = Db::table('m_worker_reward')->count();
+		$count = Db::table('tn_worker_reward')->count();
 		$rows = ceil($count / $pageSize);
-		$list = Db::table('m_worker_reward')
+		$list = Db::table('tn_worker_reward')
 		        ->alias('r')
-		        ->join('m_worker w','r.wid = w.id')
+		        ->join('tn_worker w','r.wid = w.id')
 		        ->join('cs_shop s','w.sid = s.id')
 		        ->order('r.create_time desc')
 		        ->page($page,$pageSize)

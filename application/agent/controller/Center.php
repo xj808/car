@@ -60,27 +60,38 @@ class Center extends Agent{
 		// 获取本次地区申请id
 		$id = input('post.id');
 		$county = Db::table('ca_increase')->where('id',$id)->value('area');
-        // 市级id转换为字符串
-        $city=$this->areaList($county);
-        // 省级id转换为字符串
-        $province=$this->areaList($city);
-        // 查询所有省市县的数据
-        $list=Db::table('co_china_data')->whereIn('id',$province.','.$city.','.$county)->select();
+		// 获取省市县名称id
+        $list = $this->county($county);          
         if($list){
-            // 把数据换成树状结构
-            $list = get_child($list,$list[0]['pid']);
-            if($list){
-            	$this->result($list,1,'获取地区列表成功');
-            }else{
-            	$this->result('',0,'暂未设置地区');
-            }
-
-        }else{  
-            $this->result('',0,'暂未设置地区');
+        	$this->result($list,1,'获取地区列表成功');
+        }else{
+        	$this->result('',0,'暂未设置地区');
         }
-
 	}
 
+	/**
+	 * 驳回列表修改页面信息
+	 * @return [type] [description]
+	 */
+	public function updIndex()
+	{	
+		// 获取修改地区订单id
+		$id = input('post.id');
+		$data = Db::table('ca_increase')->where('id',$id)->field('id,aid,voucher,price,area')->find();
+		if($data){
+			//根据所选县id得出所选县名称
+			$list = $this->county($data['area']);
+			if($list){
+				$this->result(['data'=>$data,'list'=>$list],1,'获取成功');
+			}else{
+				$this->result('',0,'获取数据失败');
+			}
+		}else{
+			$this->result('',0,'暂无数据');
+		}
+		
+		
+	}
 
 	/**
 	 * 地区修改
@@ -89,11 +100,18 @@ class Center extends Agent{
 	public function updRegion()
 	{
 		// 获取设置地区订单id、重新选择的区县、转账金额、转账凭证
+		$data = input('post.');
 		if($data){
-			$ar = implode(',',$data['county']);
+			$arr = [
+				'area' => implode(',',$data['county']),
+				'regions' => $data['price']/35000,
+				'price' =>$data['price'],
+				'audit_status' => 0,
+				'voucher' =>$data['voucher'],
+			];
 			//填写总金额，上传支付凭证
-			$vo=$this->upLicense($ar,$data['voucher'],$data['deposit'],$this->aid,$data['id']);
-			if($vo==true){
+			$res = Db::table('ca_increase')->where(['id'=>$data['id'],'aid'=>$this->aid])->update($arr);
+			if($res !== false){
 				Db::commit();
 				$this->result('',1,'修改成功,请等待总后台审核');
 			}else{
@@ -103,7 +121,7 @@ class Center extends Agent{
 
 		}else{
 			Db::rollback();
-			$this->result('',0,'地区不能为空');
+			$this->result('',0,'请检查您填写的数据');
 		}
 	}
 
@@ -134,41 +152,6 @@ class Center extends Agent{
 
 
 	/**
-	 * 驳回点击修改操作
-	 * @return [type] [description]
-	 */
-	public function rejMod()
-	{
-		// 获取该提高配给的订单id
-		$data = input('post.');
-		foreach ($data['county'] as $k => $v) {
-			$area[]=['area'=>$v,'aid'=>$this->aid];// 获取运营商所选择的区域
-		}
-		Db::startTrans();
-		$res=Db::table($this->area)->insertAll($area);
-		if($res){
-			$ar = array_str($area,'area');
-			//填写总金额，上传支付凭证
-			$vo=$this->upLicense($ar,$data['voucher'],$data['deposit'],$data['aid'],$data['id']);
-			if($vo==true){
-				Db::commit();
-				$this->result('',1,'设置成功');
-			}else{
-				Db::rollback();
-				$this->result('',0,'设置失败');
-			}
-
-		}else{
-			Db::rollback();
-			$this->result('',0,'设置失败');
-		}
-
-	}
-
-
-
-	
-	/**
 	 * 个人中心首页
 	 * @return 运营商信息，运营商id
 	 */
@@ -191,18 +174,15 @@ class Center extends Agent{
 	 * @return [type]
 	 */
 	public function setArea(){
-
+		// 选择的区县、转账金额、转账凭证
 		$data = input('post.');
-		// foreach ($data['county'] as $k => $v) {
-		// 	$area[]=['area'=>$v,'aid'=>$this->aid];// 获取运营商所选择的区域
-		// }
-		// // Db::startTrans();
-		// // $res=Db::table($this->area)->insertAll($area);
 		if($data){
-			$ar = implode(',',$data['county']);
+			$data['area'] = implode(',',$data['county']);
+			$data['regions'] = $data['price']/35000;
+			$data['aid'] = $this->aid;
 			//填写总金额，上传支付凭证
-			$vo=$this->upLicense($ar,$data['voucher'],$data['deposit'],$this->aid);
-			if($vo==true){
+			$res = Db::table('ca_increase')->strict(false)->insert($data);
+			if($res){
 				Db::commit();
 				$this->result('',1,'设置成功,请等待总后台审核');
 			}else{
@@ -401,6 +381,24 @@ class Center extends Agent{
 	}
 
 	/**
+	 * 根据县区id获取县市省名称
+	 * @return [type] [description]
+	 */
+	public function county($county)
+	{
+		// 市级id转换为字符串
+        $city=$this->areaList($county);
+        // 省级id转换为字符串
+        $province=$this->areaList($city);
+        // 查询所有省市县的数据
+        $list=Db::table('co_china_data')->whereIn('id',$province.','.$city.','.$county)->select();
+        return get_child($list,$list[0]['pid']);
+
+	}
+
+
+
+	/**
 	 * 判断原密码是否正确
 	 * @param  [type] $npass [修改的原密码]
 	 * @param  [type] $aid   [运营商id]
@@ -470,28 +468,6 @@ class Center extends Agent{
 			return true;
 		}
 	}
-
-
-	// /**
-	//  * 判断营业执照是否上传您是否已审核
-	//  * @return [type] [description]
-	//  */
-	// public function ifLicense()
-	// {
-	// 	$license = Db::table('ca_agent')->where('aid',$this->aid)->value('license');
-	// 	if(empty($license)){
-	// 		// 查看营业执照和系统使用费是否审核通过
-	// 		$status = Db::table('ca_agent')->where('aid',$this->aid)->value('status');
-	// 		if($status == 2){
-	// 			$this->result('',1,'已通过审核');
-	// 		}else{
-	// 			$this->result('',2,'请等待总后台审核');
-	// 		}
-	// 	}else{
-	// 		$this->result('',0,'您还没有上传营业执照');
-	// 	}
-	// }
-
 
 
 	 /**
