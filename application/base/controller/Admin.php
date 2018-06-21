@@ -54,7 +54,6 @@ class Admin extends Base
     public function showRegion($id)
     {
         $county = Db::table('ca_increase')->where('id',$id)->value('area');
-        print_r($county);exit;
         // 市级id转换为字符串
         $city=$this->areaList($county);
         // 省级id转换为字符串

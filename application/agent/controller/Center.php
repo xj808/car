@@ -25,7 +25,8 @@ class Center extends Agent{
 	 */
 	public function notList()
 	{
-		$this->ration(0);
+		$page = input('post.page')? : 1;
+		$this->ration($page,0);
 	}
 
 	/**
@@ -34,7 +35,8 @@ class Center extends Agent{
 	 */
 	public function ratAdopt()
 	{
-		$this->ration(1);
+		$page = input('post.page')? : 1;
+		$this->ration($page,1);
 	}
 
 
@@ -45,8 +47,66 @@ class Center extends Agent{
 	 */
 	public function rejList()
 	{
-		$this->ration(2);
+		$page = input('post.page')? : 1;
+		$this->ration($page,2);
 	}
+
+	/**
+	 * 点击区域个数显示区域
+	 * @return [type] [description]
+	 */
+	public function cenRegion()
+	{
+		// 获取本次地区申请id
+		$id = input('post.id');
+		$county = Db::table('ca_increase')->where('id',$id)->value('area');
+        // 市级id转换为字符串
+        $city=$this->areaList($county);
+        // 省级id转换为字符串
+        $province=$this->areaList($city);
+        // 查询所有省市县的数据
+        $list=Db::table('co_china_data')->whereIn('id',$province.','.$city.','.$county)->select();
+        if($list){
+            // 把数据换成树状结构
+            $list = get_child($list,$list[0]['pid']);
+            if($list){
+            	$this->result($list,1,'获取地区列表成功');
+            }else{
+            	$this->result('',0,'暂未设置地区');
+            }
+
+        }else{  
+            $this->result('',0,'暂未设置地区');
+        }
+
+	}
+
+
+	/**
+	 * 地区修改
+	 * @return [type] [description]
+	 */
+	public function updRegion()
+	{
+		// 获取设置地区订单id、重新选择的区县、转账金额、转账凭证
+		if($data){
+			$ar = implode(',',$data['county']);
+			//填写总金额，上传支付凭证
+			$vo=$this->upLicense($ar,$data['voucher'],$data['deposit'],$this->aid,$data['id']);
+			if($vo==true){
+				Db::commit();
+				$this->result('',1,'修改成功,请等待总后台审核');
+			}else{
+				Db::rollback();
+				$this->result('',0,'设置失败');
+			}
+
+		}else{
+			Db::rollback();
+			$this->result('',0,'地区不能为空');
+		}
+	}
+
 
 
 	/**
@@ -54,17 +114,21 @@ class Center extends Agent{
 	 * @param  [type] $status [description]
 	 * @return [type]         [description]
 	 */
-	private function ration($status)
+	private function ration($page,$status)
 	{	
-		$page =input('post.page')? : 1;
 		$pageSize = 10;
-		$count = Db::table('ca_increase')->where('audit_status',$status)->count();
+		$count = Db::table('ca_increase')->where(['audit_status'=>$status,'aid'=>$this->aid])->count();
 		$rows = ceil($count / $pageSize);
-		$list = Db::table('ca_increase')->where('audit_status',$status)->select();
-		if($list){
+		$list = Db::table('ca_increase')
+				->where(['audit_status'=>$status,'aid'=>$this->aid])
+				->order('id desc')
+				->page($page,$pageSize)
+				->select();
+		// echo Db::table('ca_increase')->getLastSql();exit;
+		if($count > 0){
 			$this->result(['list'=>$list,'rows'=>$rows],1,'获取列表成功');
 		}else{
-			$this->result('',0,'获取列表失败');
+			$this->result('',0,'暂无数据');
 		}
 	}
 
@@ -132,10 +196,10 @@ class Center extends Agent{
 		// foreach ($data['county'] as $k => $v) {
 		// 	$area[]=['area'=>$v,'aid'=>$this->aid];// 获取运营商所选择的区域
 		// }
-		// Db::startTrans();
-		// $res=Db::table($this->area)->insertAll($area);
-		if($res){
-			$ar = array_str($area,'area');
+		// // Db::startTrans();
+		// // $res=Db::table($this->area)->insertAll($area);
+		if($data){
+			$ar = implode(',',$data['county']);
 			//填写总金额，上传支付凭证
 			$vo=$this->upLicense($ar,$data['voucher'],$data['deposit'],$this->aid);
 			if($vo==true){
@@ -148,7 +212,7 @@ class Center extends Agent{
 
 		}else{
 			Db::rollback();
-			$this->result('',0,'设置失败');
+			$this->result('',0,'地区不能为空');
 		}
 	}
 

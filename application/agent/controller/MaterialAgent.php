@@ -52,7 +52,7 @@ class MaterialAgent extends Agent
 		if($list){
 			$this->result($list['detail'],1,'获取详情成功');
 		}else{
-			$this->result($list['detail'],1,'获取详情失败');
+			$this->result('',1,'获取详情失败');
 		}
 
 	}
@@ -92,11 +92,12 @@ class MaterialAgent extends Agent
 		$data=input('post.');
 
 		$ar=$this->detail($data);
-			$res=Db::table('ca_apply_materiel')->json(['detail'])->insert($ar);
+			$res=Db::table('ca_apply_materiel')->json(['detail'])->lock(true)->insert($ar);
+			
 			if($res){
-				$this->success('',1,'申请成功');
+				$this->success('',1,'申请成功,请等待总后台发货');
 			}else{
-				$this->success('',1,'申请失败');
+				$this->success('',0,'申请失败');
 			}
 	}
 

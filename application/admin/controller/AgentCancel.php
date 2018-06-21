@@ -29,6 +29,16 @@ class AgentCancel extends Admin
 		$this->index($page,1);
 	}
 
+	/**
+	 * 取消合作驳回列表
+	 * @return [type] [description]
+	 */
+	public function rejectList()
+	{
+		$page = input('post.page')? :1;
+		$this->index($page,2);
+	}
+
 
 	/**
 	 * 取消合作详情
@@ -303,7 +313,7 @@ class AgentCancel extends Admin
 				->join('ca_agent ca','ac.aid=ca.aid')
 				->where('ac.status',$status)
 				->order('id desc')
-				->field('id,ac.aid,ac.company,ac.leader,phone,ac.create_time,ac.audit_time')
+				->field('id,ac.aid,ac.company,ac.leader,phone,ac.create_time,ac.audit_time,ac.reason,rej_reason')
 				->select();
 		if($count > 0){
 			$this->result(['list'=>$list,'rows'=>$rows],1,'获取列表成功');

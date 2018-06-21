@@ -57,13 +57,18 @@ class ShopDownList extends Admin
 	{
 		$sid = input('post.id');
 		$reason = input('post.reason');
+		Db::startTrans();
+		if(empty($reason)){
+			Db::rollback();
+			$this->result('',0,'关闭理由不能为空');
+		}
 		$audit_person = Db::table('am_auth_user')->where('id',$this->admin_id)->value('name');
 		$data = [
 			'sid'=>$sid,
 			'reason'=>$reason,
 			'audit_person'=>$audit_person,
 		];
-		Db::startTrans();
+		
 		$res = Db::table('cs_reopen_logs')->insert($data);
 		if($res){
 			$open = Db::table('cs_shop')->where('id',$sid)->setField('audit_status',2);

@@ -83,11 +83,15 @@ class ShopList extends Admin
 		$sid = input('post.id');
 		// 获取关停修车厂理由
 		$reason = input('post.reason');
+		Db::startTrans();
+		if(empty($reason)){
+			Db::rollback();
+			$this->result('',0,'关闭理由不能为空');
+		}
 		$data = [
 			'sid'=>$sid,
 			'reason'=>$reason,
 		];
-		Db::startTrans();
 		$res = Db::table('cs_shut_logs')->insert($data);
 		if($res !== false){
 			$result = Db::table('cs_shop')->where('id',$sid)->update(['down_time'=>time(),'audit_status'=>5]);

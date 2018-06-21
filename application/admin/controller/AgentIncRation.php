@@ -100,9 +100,9 @@ class AgentIncRation extends Admin
 						// 将字符串转换维数组
 						$county = explode(',',$county);
 						foreach ($county as $k => $v) {
-							$area[]=['area'=>$v,'aid'=>$this->aid];// 获取运营商所选择的区域
+							$area[]=['area'=>$v,'aid'=>$data['aid']];// 获取运营商所选择的区域
 						}
-						$res=Db::table($this->area)->insertAll($area);
+						$res=Db::table('ca_area')->insertAll($area);
 						if($res){	
 							Db::commit();
 							$this->result('',1,'操作成功操作');
@@ -132,24 +132,16 @@ class AgentIncRation extends Admin
 		{	
 			// 获取驳回理由、获取运营商id、获取订单id
 			$data = input('post.');
-			// 删除运营商所选地区
-			$area = $this->delArea($data['id'],$data['aid']);
-			$res = Db::table('ca_area')->whereIn('area',$area)->delete();
+			if(empty($data['reason'])){
+				$this->result('',0,'驳回理由不能为空');
+			}
+			// 修改提高配给表的状态为驳回状态   2
+			$result = Db::table('ca_increase')->where('id',$data['id'])->update(['audit_status'=>2,'audit_time'=>time(),'reason'=>$data['reason']]);
 
-			if($res){
-
-				$result = Db::table('ca_increase')->where('id',$data['id'])->setField('audit_status',2);
-
-				if($result !== false){
-					Db::commit();
-					$this->result('',1,'操作成功');
-				}else{
-					Db::rollback();
-					$this->result('',0,'操作失败');
-				}
+			if($result !== false){
+				$this->result('',1,'驳回成功');
 			}else{
-				Db::rollback();
-				$this->result('',0,'删除失败');
+				$this->result('',0,'驳回失败');
 			}
 		}
 

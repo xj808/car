@@ -119,6 +119,9 @@ class AgentMateriel extends Admin
 	{
 		$id =input('post.id');
 		$reason = input('post.reason');
+		if(empty($reason)){
+			$this->result('',0,'驳回理由不能为空');
+		}
 		$audit_person = Db::table('am_auth_user')->where('id',$this->admin_id)->value('name');
 		$data=[
 			'audit_status'=>2,
@@ -130,7 +133,7 @@ class AgentMateriel extends Admin
 		if($result !== false){
 			$this->result('',1,'驳回成功');
 		}else{
-			$this->result('',1,'驳回失败');
+			$this->result('',0,'驳回失败');
 		}
 
 	}
