@@ -27,7 +27,7 @@ class Agent extends Base
      */
     public function images()
     {           
-        return upload('image','agent','http://192.168.1.110/car/public');
+        return upload('image','agent','https://cc.ctbls.com');
     }
 
 

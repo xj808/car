@@ -37,8 +37,6 @@ class Login extends Shop
 				if(compare_password($data['passwd'],$us['passwd'])){
 					// 生成token作为验证使用
 					$token = $this->token($us['id'],$data['usname']);
-					// 更新运营商
-					$this->setAid($us['id']);
 					// 登录成功返回数据
 					$this->result(['token'=>$token,'audit_status'=>$us['audit_status']],1,'登录成功');
 				}else{
@@ -50,20 +48,6 @@ class Login extends Shop
 		}else{
 			$this->result('',0,$validate->getError());
 		}
-	}
-
-	/**
-	 * 绑定运营商
-	 */
-	public function setAid($sid)
-	{
-		// 获取维修厂所在区域
-		$county_id = Db::table('cs_shop_set')->where('sid',$sid)->value('county_id');
-		// 通过县区id获得运营商的id
-		$aid = Db::table('ca_area')->where('area',$county_id)->value('aid');
-		// 更新运营商id
-		$aid =  $aid ? : 0;
-		Db::table('cs_shop')->where('sid',$sid)->setField('aid',$aid);
 	}
 
 
@@ -83,12 +67,20 @@ class Login extends Shop
 			$check = $this->sms->compare($data['mobile'],$data['code']);
 			if($check !== false){
 				// 进行修改密码的操作
-				$res=Db::table('cs_shop')->where('phone',$data['mobile'])->setField('passwd',get_encrypt($data['passwd']));
-				if($res !== false){
-                    $this->result('',1,'修改成功');
-                }else{
-                    $this->result('',0,'修改失败');
-                }
+				$count = Db::table('cs_shop')->where('phone',$data['mobile'])->count();
+				if($count > 0){
+
+					$res=Db::table('cs_shop')->where('phone',$data['mobile'])->setField('passwd',get_encrypt($data['passwd']));
+					// echo Db::table('cs_shop')->getLastSql();exit;
+					if($res !==false){
+	                    $this->result('',1,'修改成功');
+	                }else{
+	                    $this->result('',0,'修改失败');
+	                }
+				}else{
+					$this->result('',0,'您的手机号没有注册过该系统，请核实');
+				}
+				
 			}else{
 				$this->result('',0,'手机验证码无效或已过期');
 			}
@@ -131,6 +123,5 @@ class Login extends Shop
         JWT::$leeway = 600;
         return $JWT;
     }
-
 
 }

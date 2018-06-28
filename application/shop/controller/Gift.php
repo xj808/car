@@ -90,7 +90,7 @@ class Gift extends Shop
 				$sa = Db::table('cs_shop_set')->where('id',$this->sid)->setInc('balance',100);
 			}
 			// 兑换码失效，兑换信息改变
-			$ex = Db::table('cs_gift')->where('excode',$excode)->update(['ex_time'=>time(),'status'=>2]);
+			$ex = Db::table('cs_gift')->where('excode',$excode)->update(['ex_time'=>time(),'status'=>1]);
 			// 进行事务处理
 			if(($se && $ex) || ($si && $sa && $ex)){
 				Db::commit();

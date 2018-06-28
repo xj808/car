@@ -234,6 +234,21 @@ class Center extends Agent{
 	}
 
 
+	/**
+	 * 上传营业执照
+	 * @return 成功或失败
+	 */
+	public function usecost(){
+
+		$usecost=input('post.usecost');
+		$res=Db::table($this->agent)->where('aid',$this->aid)->update(['usecost'=>$usecost,'status'=>1]);
+		if($res){
+			$this->result('',1,'上传支付凭证成功');
+		}else{
+			$this->result('',0,'上传支付凭证失败');
+		}
+	}
+
 
 
 	/**
@@ -360,20 +375,21 @@ class Center extends Agent{
 	{
 		// 判断用户有没有上传营业执照
 		$lice = Db::table('ca_agent')->where('aid',$this->aid)->value('license');
-		if(empty($lice)){
-			$this->result('',2,'您还未上传营业执照，请您到个人中心上传营业执照。');
+		$usecost = Db::table('ca_agent')->where('aid',$this->aid)->value('usecost');
+		if(empty($lice) && empty($usecost)){
+			$this->result('',2,'您还未上传营业执照和系统使用费，请您到个人中心上传。');
 		}
 		$status = Db::table('ca_agent')->where('aid',$this->aid)->value('status');
 		if($status == 2 ){
 			// 查看运营商是否设置地区
-			$count = Db::table('ca_area')->where('aid',$this->aid)->count();
+			$count = Db::table('ca_increase')->where('aid',$this->aid)->count();
 			if($count > 0){
 				$this->result('',1,'已设置地区');
 			}else{
-				$this->result('',0,'您还未设置地区，请您到个人中心->供应地区->修改 设置您的地区。');
+				$this->result('',0,'您还未设置地区，请您到个人中心->供应地区->设置您的地区。');
 			}
 		}else{
-			$this->result('',3,'您已上传营业执照请等待总后台审核。');
+			$this->result('',3,'您已上传营业执照和系统使用费,请等待总后台审核。');
 		}
 
 		

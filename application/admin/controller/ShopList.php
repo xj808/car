@@ -117,10 +117,10 @@ class ShopList extends Admin
 		$sid = input('post.id');
 		$page = input('post.page')? :1;
 		$pageSize = 10;
-		$count = Db::table('m_worker')->where('sid',$sid)->count();
+		$count = Db::table('tn_user')->where('sid',$sid)->count();
 		$rows = ceil($count / $pageSize);
 		// 获取该修车厂技师列表
-		$list = Db::table('m_worker')
+		$list = Db::table('tn_user')
 				->where('sid',$sid)
 				->field('name,phone,server,skill')
 				->order('id desc')

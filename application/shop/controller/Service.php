@@ -91,7 +91,7 @@ class Service extends Shop
 	 */
 	public function uploadImg()
 	{
-		return upload('file','shop/service','http://192.168.1.120/tp5/public');
+		return upload('file','shop/service','https://cc.ctbls.com');
 	}
 
 

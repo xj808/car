@@ -16,7 +16,7 @@ class Main extends Shop
 	 */
 	public function initialize()
 	{
-		// parent::initialize();
+		parent::initialize();
 	}
 
 	/**
@@ -123,10 +123,11 @@ class Main extends Shop
 	public function getAccount()
 	{
 		// 检测用户是否存在
-		$count = $this->isExist();
+		$count = Db::table('cs_shop_set')->where('sid',$this->sid)->count();
 		// 如果存在则修改用户信息
 		if($count > 0){
-			return Db::table('cs_shop_set')->field('bank,account_name,branch,account')->where('sid',$this->sid)->find();
+			$data = Db::table('cs_shop_set')->field('bank,account_name,branch,account')->where('sid',$this->sid)->find();
+			$this->result($data,1,'success');
 		}else{
 			$this->result('',0,'该用户为新用户');
 		}
@@ -186,17 +187,20 @@ class Main extends Shop
 	{
 		// 获取提交过来的信息
 		$data = input('post.');
-		// 检测用户是否存在
-		$count = $this->isExist();
+		// 检测用户详情是否存在
+		$count = Db::table('cs_shop_set')->where('sid',$this->sid)->count();
 		// 根据坐标获得hash值
-		$geo = new Geohash();
+		$geo = new Geo();
 		$data['hash_val'] = $geo->encode_hash($data['lat'],$data['lng']);
+		// 删除token
+		unset($data['token']);
 		// 如果存在则修改用户信息
 		if($count > 0){
 			$save = Db::table('cs_shop_set')->where('sid',$this->sid)->update($data);
 		}else{
 			// 添加新的信息
-			$save = Db::table('cs_shop_set')->where('sid',$this->sid)->insert($data);
+			$data['sid'] = $this->sid;
+			$save = Db::table('cs_shop_set')->insert($data);
 		}
 		if($save !== false){
 			$this->result('',1,'保存成功');
@@ -211,7 +215,7 @@ class Main extends Shop
 	 */
 	public function uploadImg()
 	{
-		return upload('file','shop/photo','https://mp.ctbls.com');
+		return upload('file','shop/photo','https://cc.ctbls.com');
 	}
 
 	/**

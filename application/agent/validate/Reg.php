@@ -21,7 +21,6 @@ class Reg extends Validate
       'account|提款账号'	=> 'require|number',
       'phone|手机号'	    => 'require|mobile',
       'code|验证码'       => 'require|number',
-      'usecost|支付凭证'  => 'require',
     ];
     protected $message=[
     	'qpass.confirm'		=>'两次密码不一致',

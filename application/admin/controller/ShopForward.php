@@ -150,7 +150,6 @@ class ShopForward extends Admin
 		$mobile = input('post.phone');
 		// 获取提现信息
 		$order = Db::table('cs_apply_cash')->field('sid,odd_number,account,account_name,bank_code,money,create_time')->where('id',$id)->find();
-		print_r($order);exit;
 		// 获取审核人姓名
 		$audit_person = Db::table('am_auth_user')->where('id',$this->admin_id)->value('name');
 		// 收取手续费1.5/1000
@@ -159,6 +158,7 @@ class ShopForward extends Admin
         // 进行提现操作
         $epay = new Epay();
         $res = $epay->toBank($order['odd_number'],$order['account'],$order['account_name'],$order['bank_code'],$order['money'],$order['account_name'].'测试提现');
+        print_r($res);exit;
         // 提现成功后操作
         if($res['return_code']=='SUCCESS' && $res['result_code']=='SUCCESS'){
         	// 更新数据
@@ -169,7 +169,7 @@ class ShopForward extends Admin
 				'wx_cmms' => $cmms,
 	            'cmms_amt' => $res['cmms_amt']/100
 			];
-			$save = Db::table('ca_apply_cash')->where('id',$id)->update($arr);
+			$save = Db::table('cs_apply_cash')->where('id',$id)->update($arr);
 			if($save !== false){
 				// 处理短信参数
 				$time = $order['create_time'];

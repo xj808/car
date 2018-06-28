@@ -11,7 +11,7 @@ class Msg
 	 */
 	public function getLastMid($rid)
 	{
-		return Db::table('am_msg')->where('sendto','like','%'.$rid.'%')->max('id');
+		return Db::table('am_msg')->where('sendto','like','%'.$rid)->max('id');
 	}
 
 	/**
@@ -26,9 +26,9 @@ class Msg
 	/**
 	 * 获取当前信息列表
 	 */
-	public function msgList($table,$uid,$page,$rid)
+	public function msgList($table,$uid,$page)
 	{	
-		$pageSize = 7;
+		$pageSize = 10;
 		$count = Db::table($table)->where('uid',$uid)->count();
 		$rows = ceil($count / $pageSize);
 		$list = Db::table($table)
@@ -47,7 +47,7 @@ class Msg
 	 */
 	public function msgLists($table,$uid,$status,$page)
 	{	
-		$pageSize = 7;
+		$pageSize = 10;
 		$count = Db::table($table)->where('uid',$uid)->count();
 		$rows = ceil($count / $pageSize);
 		$where=[['uid','=',$uid],['status','=',$status]];
@@ -69,7 +69,6 @@ class Msg
 	{
 		// 获取系统消息最后一条
 		$s_mid = $this->getLastMid($rid);
-		// echo Db::table('am_msg')->getLastSql();exit;
 		// 获取消息库里最后一条
 		$u_mid = $this->getMaxMid($table,$uid);
 		// 如果消息库里的id大于等于系统消息的id
@@ -78,7 +77,7 @@ class Msg
 			return false;
 		}else{
 			// 获取所差的数据条数
-			$mids = Db::table('am_msg')->where('id','>',$u_mid)->where('sendto','like','%'.$rid.'%')->column('id');
+			$mids = Db::table('am_msg')->where('id','>',$u_mid)->column('id');
 			// 将所差数据插入数据库
 			foreach ($mids as $k => $v) {
 				$data[$k] = ['uid'=>$uid,'mid'=>$v];

@@ -15,7 +15,7 @@ return [
     // 服务器地址
     'hostname'        => '5962d5f243f03.bj.cdb.myqcloud.com',
     // 数据库名
-    'database'        => 'cc',
+    'database'        => 'zd',
     // 用户名
     'username'        => 'cdb_outerroot',
     // 密码

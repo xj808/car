@@ -21,7 +21,7 @@ class FundExpend extends Admin
 		$rows = ceil($count / $pageSize);
 		$list = Db::table('tn_worker_reward')
 		        ->alias('r')
-		        ->join('tn_worker w','r.wid = w.id')
+		        ->join('tn_user w','r.wid = w.id')
 		        ->join('cs_shop s','w.sid = s.id')
 		        ->order('r.create_time desc')
 		        ->page($page,$pageSize)
@@ -83,7 +83,7 @@ class FundExpend extends Admin
 		        ->order('c.create_time desc')
 		        ->where('c.audit_status',1)
 		        ->page($page,$pageSize)
-		        ->field('s.company,s.phone,s.leader,c.audit_person,money,c.arrive_time,c.account')
+		        ->field('s.company,s.phone,s.leader,c.audit_person,money,c.audit_time,c.account')
 		        ->select();
 		$amount = 0;//汽修厂提现总金额
 		foreach ($list as $key => $value) {
@@ -112,7 +112,7 @@ class FundExpend extends Admin
 		        ->order('c.create_time desc')
 		        ->where('c.audit_status',1)
 		        ->page($page,$pageSize)
-		        ->field('a.company,a.phone,a.leader,money,c.arrive_time,c.account')
+		        ->field('a.company,a.phone,a.leader,money,c.audit_time,c.account')
 		        ->select();
 		$amount = 0;//运营商提现总金额
 		foreach ($list as $key => $value) {

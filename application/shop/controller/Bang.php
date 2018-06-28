@@ -15,7 +15,13 @@ class Bang extends Shop
 	 */
 	public function initialize()
 	{
-		parent::initialize();
+		// parent::initialize();
+	}
+
+
+	public function aa($value='')
+	{
+		print_r($_SERVER);
 	}
 
 	/**

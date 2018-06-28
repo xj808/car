@@ -20,7 +20,7 @@ class Capital extends Agent
 	public function index()
 	{
 		$page = input('post.page') ? : 1;
-		$pageSize = 10;
+		$pageSize = 7;
 		$count = Db::table('ca_income')->where('aid',$this->aid)->count();
 		$rows = ceil($count / $pageSize);
 		$list=Db::table('ca_income ci')

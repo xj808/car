@@ -13,7 +13,7 @@ class SmallSlideshow extends Admin
 	 */
 	public function uploadPic()
 	{
-		return upload('image','slideshow','http://192.168.1.110/car/public');
+		return upload('image','slideshow','http://cc.ctbls.com/');
 	}
 
     /**
@@ -22,7 +22,13 @@ class SmallSlideshow extends Admin
     public function addPic()
     {
     	$data = input('post.');
-    	$data['create_time'] = time();
+    	if(empty($data['pic'])){
+			$this->result('',0,'未上传照片');
+		}
+    	if(empty($data['gid'])){
+				$this->result('',0,'请选择小程序');
+			}
+    	$data['create_time'] = date('Y-m-d H:i:s', time());
     	$res = Db::table('am_banner')
     	       ->strict(false)
     	       ->insert($data);
@@ -40,13 +46,13 @@ class SmallSlideshow extends Admin
 	public function picList()
 	{
 		$page = input('post.page')? : 1;
-		$pageSize = 10;
+		$pageSize = 4;
 		$count = Db::table('am_banner')->count();
 		$rows = ceil($count / $pageSize);
 		$list = Db::table('am_banner')
 				->order('create_time desc')
 				->page($page,$pageSize)
-				->field('id,title,pic,content,create_time')
+				->field('id,title,pic,gid,content,create_time')
 				->select();
 		if($count > 0){
             $this->result(['list'=>$list,'rows'=>$rows],1,'获取列表成功');
@@ -64,6 +70,12 @@ class SmallSlideshow extends Admin
 		$data = input('post.');
 		$id = input('post.id');
 		unset($data['token']);
+		if(empty($data['pic'])){
+			$this->result('',0,'未上传照片');
+		}
+		if(empty($data['gid'])){
+				$this->result('',0,'请选择小程序');
+			}
 		$res = Db::table('am_banner')
 		       ->where('id',$id)
 		       ->update($data);
@@ -73,7 +85,23 @@ class SmallSlideshow extends Admin
 			$this->result('',0,'修改信息失败，请重试');
 		}
 	}
-
+	/**
+	 * 某个轮播图的信息
+	 * @return [type] [description]
+	 */
+	public function picDetail()
+	{
+		$id = input('post.id');
+		$pic = Db::table('am_banner')
+		       ->where('id',$id)
+		       ->field('id,gid,pic,title,content')
+		       ->find();
+		if($pic){
+			$this->result(['pic'=>$pic],1,'获取信息成功');
+		} else {
+			$this->result('',0,'获取信息失败');
+		}
+	}
 	/**
 	 * 删除轮播图
 	 * @return [type] [description]

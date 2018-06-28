@@ -46,7 +46,6 @@ class Login extends Base
 	}
 
 
-
 	/**
      * 忘记密码
      * @return json 修改成功或失败
@@ -82,6 +81,9 @@ class Login extends Base
 		$this->result('',1,$this->forCode($phone));
 	}
 
+
+	
+
 	/**
      * @param   用户id
      * @param  用户登录账户
@@ -92,7 +94,7 @@ class Login extends Base
         $key=create_key();   //
         $token=['id'=>$uid,'login'=>$login];
         $JWT=JWT::encode($token,$key);
-        JWT::$leeway =70000;
+        JWT::$leeway =600;
         return $JWT;
     }
 

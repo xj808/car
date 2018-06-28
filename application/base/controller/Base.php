@@ -3,7 +3,7 @@ namespace app\base\controller;
 use think\Controller;
 use Firebase\JWT\JWT;
 use think\Db;
-use msg\Sms;
+use Msg\Sms;
 /**
 * token登录  验证
 */
@@ -12,6 +12,13 @@ class Base extends Controller{
     function initialize()
     {
         $this->sms = new Sms();
+        $origin = isset($_SERVER["HTTP_ORIGIN"]) ? $_SERVER["HTTP_ORIGIN"] : '*';
+        // header('Access-Control-Allow-Origin:*');
+        header('Access-Control-Allow-Headers:x-requested-with'); 
+        header('Access-Control-Allow-Origin:'.$origin); 
+        header('Access-Control-Allow-Credentials:true');
+        header('Access-Control-Allow-Methods:GET, POST, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers:Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Cache-Control, Expires, Content-Type, X-E4M-With');    
     }
     /**
      * 验证token
@@ -35,6 +42,9 @@ class Base extends Controller{
             }
         }
     }
+
+
+
     /**
      * 前台返回token时验证token
      * @param  token
@@ -47,25 +57,27 @@ class Base extends Controller{
         $sign=json_decode($sign,true);
         return $sign['id'];
     }
+
+    
     /**
      * 获取省级名称
      * @return 省级地区名称
      */
     public function province(){
-        return Db::table('co_china_data')->where('pid',1)->select();
+        return Db::table('co_china_data')->field('id,name,code')->where('pid',1)->select();
     }
     /**
      * 获取市级
      * @return 市级地区名称
      */
     public function city($pid){
-        return Db::table('co_china_data')->where('pid',$pid)->select();
+        return Db::table('co_china_data')->field('id,name,code')->where('pid',$pid)->select();
     }
     /**
      * @return 获取城市名称
      */
     public function county($cid){
-        return Db::table('co_china_data')->where('pid',$cid)->select();
+        return Db::table('co_china_data')->field('id,name,code')->where('pid',$cid)->select();
     }
     /**
      * 生成验证码
@@ -146,6 +158,28 @@ class Base extends Controller{
             return true;
         }
     }
+
+    /**
+ * 单图片上传
+ * @param  图片字段
+ * @param  要保存的路径
+ * @return 图片保存后的路径
+ */
+ function upload($image,$path,$host){
+    // 本地测试地址，上线后更改
+    $host = $host ? $host : $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['HTTP_HOST'];
+    // 获取表单上传文件
+    $file = request()->file($image);
+    // 进行验证并进行上传
+    $info = $file->validate(['size'=>3145728,'ext'=>'jpg,png,jpeg'])->move( './uploads/'.$path);
+    // 上传成功后输出信息
+    if($info){
+      return  $host.'/uploads/'.$path.'/'.$info->getSaveName();
+    }else{
+      // 上传失败获取错误信息
+      return  $file->getError();
+    }
+}
 
     
 }

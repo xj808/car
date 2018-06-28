@@ -96,8 +96,14 @@ class AgentMateriel extends Admin
 					->update();
 			}
 			if($res !== false){
-				Db::commit();
-				$this->result('',1,'操作成功');
+				// 获取运营商电话
+				$mobile = Db::table('ca_agent')->where('aid',$aid)->value('phone');
+
+				// 给运营商发送短信
+				$content = "您申请的货物已发出，请注意查收。";
+	        	$send = $this->sms->send_code($mobile,$content);
+	        	Db::commit();
+				$this->result('',1,'处理成功');
 			}else{
 				Db::rollback();
 				$this->result('',0,'操作失败');
@@ -131,7 +137,17 @@ class AgentMateriel extends Admin
 		];
 		$result = Db::table('ca_apply_materiel')->where('id',$id)->update($data);
 		if($result !== false){
-			$this->result('',1,'驳回成功');
+			// 获取运营商id
+			$aid = Db::table('ca_apply_materiel')->where('id',$id)->value('aid');
+			// 获取运营商电话
+			$mobile = Db::table('ca_agent')->where('aid',$aid)->value('phone');
+			// 获取物料申请时间
+			$create_time = Db::table('ca_apply_materiel')->where('aid',$aid)->value('create_time');
+			// 给运营商发送短信
+			$content = "您于【".$create_time."】申请的物料,因【".$reason."】被驳回，请完成修订后重新提交。";
+        	$send = $this->sms->send_code($mobile,$content);
+        	Db::commit();
+			$this->result('',1,'处理成功');
 		}else{
 			$this->result('',0,'驳回失败');
 		}
@@ -190,9 +206,10 @@ class AgentMateriel extends Admin
 		$count = Db::table('ca_apply_materiel')->where('audit_status',$status)->count();
 		$rows = ceil($count / $pageSize);
 		$list = Db::table('ca_apply_materiel am')
-				->join('ca_agent ca','ca.aid = am.aid')
+				->leftJoin('ca_agent ca','ca.aid = am.aid')
 				->where('am.audit_status',$status)
-				->order('id desc')->page($page,$pageSize)
+				->page($page,$pageSize)
+				->order('id desc')
 				->field('am.id,company,leader,phone,am.create_time,am.audit_time')
 				->select();
 		if($count > 0){

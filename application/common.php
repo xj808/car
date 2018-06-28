@@ -22,6 +22,7 @@
     $host = $host ? $host : $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['HTTP_HOST'];
     // 获取表单上传文件
     $file = request()->file($image);
+    // print_r($file);exit;
     // 进行验证并进行上传
     $info = $file->validate(['size'=>3145728,'ext'=>'jpg,png,jpeg'])->move( './uploads/'.$path);
     // 上传成功后输出信息
