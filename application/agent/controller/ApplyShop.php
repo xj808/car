@@ -90,7 +90,7 @@ class ApplyShop extends Agent
 		if($data){
 			$this->result($data,1,'获取完成列表成功');
 		}else{
-			$this->result($data,0,'没有数据');
+			$this->result('',0,'没有数据');
 		}
 	}
 

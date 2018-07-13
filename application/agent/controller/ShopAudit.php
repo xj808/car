@@ -91,7 +91,7 @@ class ShopAudit extends Agent
 			// 修车厂配给库存增加
 			if($this->shopRation($sid)){
 				// 更改修理厂审核状态
-				if($this->status('cs_shop',$sid,2)==true){
+				if($this->shopStatus($sid)==true){
 					Db::commit();
 					$this->result('',1,'操作成功');
 				}else{
@@ -111,6 +111,21 @@ class ShopAudit extends Agent
 		
 	}
 
+
+	  /**
+     * 修改状态
+     * @param  [type] $table   要修改的表
+     * @param  [type] $sid     要修改的id
+     * @param  [type] $status  要修改的状态值
+     * @return [type]         [description]
+     */
+    public function shopStatus($id)
+    {
+        $res=Db::table('cs_shop')->where('id',$id)->update(['audit_status'=>2,'audit_time'=>time()]);
+        if($res!==false){
+            return true;
+        }
+    }
 
 	/**
 	 * 修车厂审核驳回操作

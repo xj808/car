@@ -69,8 +69,8 @@ class AgentIncRation extends Admin
 		 */
 		public function detailArea()
 		{
-			// 获取运营商id
-			$aid = input('post.id');
+			// 获取提高配给表id
+			$id = input('post.id');
 			$list =$this->showRegion($aid);
 			if($list){
 				$this->result($list,1,'获取列表成功');

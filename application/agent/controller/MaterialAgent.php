@@ -8,6 +8,7 @@ use think\Db;
 class MaterialAgent extends Agent
 {
 
+
 	/**
 	 * 物料申请未审核列表
 	 * @return [type] [description]
@@ -145,18 +146,18 @@ class MaterialAgent extends Agent
 	 */
 	public function ifWarning()
 	{
+		// 运营商是否处于取消合作状态
+		$status = Db::table('ca_agent')->where('aid',$this->aid)->value('status');
+		// 运营商的物料库存是否小于预警值
 		$count = Db::table('ca_ration')
 				->where('aid',$this->aid)
 				->where('warning > materiel_stock')
 				->where('materiel_stock < ration')
 				->count();
-
-		if($count > 0 ){
-			
+		if($count > 0  && $status !== 6){
 			return true;
 		}else{
 			return false;
-
 		}
 	}
 

@@ -19,7 +19,7 @@ class Reg extends Validate
       'branch|开户分行'	  => 'require',
       'bank_name|开户名'  => 'require',
       'account|提款账号'	=> 'require|number',
-      'phone|手机号'	    => 'require|mobile',
+      'phone|手机号'	    => 'require|mobile|unique:ca_agent',
       'code|验证码'       => 'require|number',
     ];
     protected $message=[

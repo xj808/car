@@ -122,14 +122,17 @@ class Main extends Shop
 	 */
 	public function getAccount()
 	{
+		// 在页面返回手机号
+		$phone = Db::table('cs_shop')->where('id',$this->sid)->value('phone');
 		// 检测用户是否存在
 		$count = Db::table('cs_shop_set')->where('sid',$this->sid)->count();
 		// 如果存在则修改用户信息
 		if($count > 0){
 			$data = Db::table('cs_shop_set')->field('bank,account_name,branch,account')->where('sid',$this->sid)->find();
+			$data['phone'] = $phone;
 			$this->result($data,1,'success');
 		}else{
-			$this->result('',0,'该用户为新用户');
+			$this->result(['phone'=>$phone],0,'该用户为新用户');
 		}
 	}
 
@@ -138,6 +141,8 @@ class Main extends Shop
 	 */
 	public function setAccount()
 	{
+		// 检测用户是否完善信息
+		$count = Db::table('cs_shop_set')->where('sid',$this->sid)->count();
 		// 获取数据
 		$data = input('post.');
 		// 获取用户手机号码
@@ -145,10 +150,15 @@ class Main extends Shop
 		// 验证码短信验证码
 		$check = $this->sms->compare($mobile,$data['code']);
 		if($check !== false){
-			$res = 	Db::table('cs_shop_set')
+			if($count > 0){
+				$res = 	Db::table('cs_shop_set')
 					->where('id',$this->sid)
 					->update(['branch'=>$data['branch'],'bank'=>$data['bank'],'account_name'=>$data['account_name'],'account'=>$data['account']]);
-			if($res !== false){
+			}else{
+				$data['sid'] = $this->sid;
+				$add = 	Db::table('cs_shop_set')->strict(false)->insert($data);
+			}
+			if($add || $res !== false){
 				$this->result('',1,'修改成功');
 			}else{
 				$this->result('',0,'修改失败');
@@ -164,16 +174,17 @@ class Main extends Shop
 	 */
 	public function getInfo()
 	{
-		// 检测用户是否存在
-		$count = $this->isExist();
+		// 检测用户详情是否存在
+		$count = Db::table('cs_shop_set')->where('sid',$this->sid)->count();
 		// 如果存在则返回该用户信息
 		if($count > 0){
-			return 	Db::table('cs_shop')
+			$data = Db::table('cs_shop')
 					->alias('c')
 					->join(['cs_shop_set'=>'s'],'s.sid = c.id')
-					->field('license,photo,major,company,about,leader,province,city,county,address,serphone')
+					->field('license,photo,major,company,about,leader,province,city,county,address,serphone,lat,lng')
 					->where('c.id',$this->sid)
 					->find();
+			$this->result($data,1,'获取数据成功');
 		}else{
 			// 否则返回空信息
 			$this->result('',0,'该用户为新用户');
@@ -187,6 +198,8 @@ class Main extends Shop
 	{
 		// 获取提交过来的信息
 		$data = input('post.');
+		// 接受图片json处理
+		$data['photo'] = json_encode($data['photo']);
 		// 检测用户详情是否存在
 		$count = Db::table('cs_shop_set')->where('sid',$this->sid)->count();
 		// 根据坐标获得hash值
@@ -200,14 +213,16 @@ class Main extends Shop
 		}else{
 			// 添加新的信息
 			$data['sid'] = $this->sid;
-			$save = Db::table('cs_shop_set')->insert($data);
+			$add = Db::table('cs_shop_set')->insert($data);
 		}
-		if($save !== false){
+		if($save !== false || $add){
 			$this->result('',1,'保存成功');
 		}else{
 			$this->result('',0,'保存失败');
 		}
 	}
+
+	
 
 
 	/**
@@ -231,12 +246,12 @@ class Main extends Shop
 		$check = $this->sms->compare($mobile,$data['code']);
 		if($check !== false){
 			// 获取原密码
-			$op = DB::table('cs_shop')->where('id',$this->sid)->value('passwd');
+			$op = Db::table('cs_shop')->where('id',$this->sid)->value('passwd');
 			// 检测原密码
 			if(get_encrypt($data['passwd']) == $op){
 				// 检测数据提交
-				if($data['npass'] == $data['spass']){
-					$res = Bb::table('cs_shop')->where('id',$this->sid)->setField('passwd',get_encrypt($data['passwd']));
+				if($data['npasswd'] == $data['spasswd']){
+					$res = Db::table('cs_shop')->where('id',$this->sid)->setField('passwd',get_encrypt($data['passwd']));
 					if($res !== false){
 						$this->result('',1,'修改成功');
 					}else{

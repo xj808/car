@@ -24,7 +24,7 @@ class Msgs extends Shop
 	public function getList()
 	{
 		$page = input('post.page') ? : 1;
-		$list = $this->coMsg->msgList('cs_msg',$this->sid,$page);
+		$list = $this->coMsg->msgList('cs_msg',$this->sid,$page,2);
 		if($list){
 			$this->result($list,1,'获取消息列表成功');
 		}else{

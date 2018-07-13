@@ -3,6 +3,7 @@ namespace app\admin\controller;
 use app\base\controller\Base;
 use think\Db;
 use Firebase\JWT\JWT;
+use think\Request;
 /**
 * 总后台登录
 */
@@ -25,7 +26,12 @@ class Login extends Base
 
 				// 比较输入的密码是否和数据库存的密码一致
 				if(compare_password($data['pwd'],$arr['pwd'])){
-
+					$request = new Request();
+					$a = [
+						'last_login_ip'=>$request->ip(),
+						'last_login_time'=>time(),
+					];
+					$res = Db::table('am_auth_user')->where('id',$arr['id'])->update($a);
 					$token = $this->token($arr['id'],$data['name']);
 
 					$this->result($token,1,'登录成功');
@@ -55,7 +61,7 @@ class Login extends Base
         $validate=validate('Forget');
         if($validate->check($data)){
             if($this->sms->compare($data['phone'],$data['code'])){
-                $res=Db::table('ca_agent')->where('phone',$data['phone'])->setField('pass',get_encrypt($data['pass']));
+                $res=Db::table('am_auth_user')->where('phone',$data['phone'])->setField('pwd',get_encrypt($data['pass']));
                 if($res!==false){
                     $msg=['status'=>1,'msg'=>'修改成功'];
                 }else{

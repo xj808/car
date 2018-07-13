@@ -37,8 +37,9 @@ class Login extends Shop
 				if(compare_password($data['passwd'],$us['passwd'])){
 					// 生成token作为验证使用
 					$token = $this->token($us['id'],$data['usname']);
+					$login_status = $this->loginStatus($us['id']);
 					// 登录成功返回数据
-					$this->result(['token'=>$token,'audit_status'=>$us['audit_status']],1,'登录成功');
+					$this->result(['token'=>$token],$login_status['code'],$login_status['msg']);
 				}else{
 					$this->result('',0,'用户名或密码错误');
 				}
@@ -47,6 +48,34 @@ class Login extends Shop
 			}
 		}else{
 			$this->result('',0,$validate->getError());
+		}
+	}
+
+
+	/**
+	 * 用户登录返回状态
+	 * @param  [type] $token [description]
+	 * @param  [type] $sid   [description]
+	 * @return [type]        [description]
+	 */
+	public function loginStatus($sid)
+	{
+		$status = Db::table('cs_shop')->where('id',$sid)->value('audit_status');
+		$ration= Db::table('cs_ration')->where('sid',$sid)->column('stock');
+		$stock = array_sum($ration);
+		if($status == 1 || $status == 3){
+			return  ['code'=>1,'msg'=>'请您完善信息'];
+
+		}else if($status == 6 && $stock <= 0){
+			return  ['code'=>3,'msg'=>'您已取消合作且做完剩余邦保养,可提现余额'];
+
+		}else if($status == 4){
+			return  ['code'=>3,'msg'=>'您已取消合作,可提现余额'];
+
+		}else if($status == 2 || $status == 6){
+			return  ['code'=>2,'msg'=>'登录成功'];
+		}else if($status == 5){
+			return  ['code'=>4,'msg'=>'您因连续三次未完成任务,店铺已关停,请联系运营商'];
 		}
 	}
 

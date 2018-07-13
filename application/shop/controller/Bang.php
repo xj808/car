@@ -34,6 +34,7 @@ class Bang extends Shop
 		$pageSize = 2;
 		// 获取分页总条数
 		$count = Db::table('cs_income')->where('sid',$this->sid)->count();
+		print_r($count);exit;
 		$rows = ceil($count / $pageSize);
 		$list = Db::table('cs_income')
 				->alias('i')

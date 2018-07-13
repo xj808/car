@@ -82,13 +82,13 @@ class Money extends Shop
 			$arr = [
 				'odd_number' => build_order_sn(),
 				'sid'		=> $this->sid,
-				'bank'	=>	$info['bank'],
+				'bank_code'	=>	$info['bank'],
 				'account_name'	=>	$info['account_name'],
 				'account'	=>	$info['account'],
 				'money'	=>	$data['money']
 			];
 			// 检测提现金额是否超限
-			$max = Db::table('cs_shop')->where('id',$this->sid)->getField('balance');
+			$max = Db::table('cs_shop')->where('id',$this->sid)->value('balance');
 			if($max < $data['money']){
 				$this->result('',0,'超过最大提现额度');
 			}
@@ -97,7 +97,7 @@ class Money extends Shop
 			// 进行数据验证
 			if($validate->check($arr)){
 				// 写入提现记录
-				$draw_log = Db::table('cs_apply_cash')->insert($arr);
+				$draw_log = Db::table('cs_apply_cash')->strict(false)->insert($arr);
 				// 账户余额减少
 				$account_dec = Db::table('cs_shop')->where('id',$this->sid)->setDec('balance',$data['money']);
 				// 进行事务提交

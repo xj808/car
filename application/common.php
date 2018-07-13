@@ -97,6 +97,30 @@ function array_str($data,$key){
      return $arr;
   };
 
+
+/**
+ *  无限极分类 level
+ * @param  数组
+ * @param  父级id
+ * @return 树形数组
+ */
+  function get_level($data,$pid=0,$level=0){
+      $arr = array();
+      foreach ($data as $key =>$v) {
+          if ($v['pid']==$pid) {
+              $v['level'] = $level;
+              $son = get_level($data,$v['id'],$level+1);
+              if ($son){
+                  $v["son"] = $son;
+              }
+             $arr = $v;
+          }
+      }
+     return $arr;
+  };
+
+
+
   /**
    * 生成唯一编号
    * @return [type] [description]
@@ -119,3 +143,4 @@ function build_order_sn()
 {
     return str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT) . time();
 }
+

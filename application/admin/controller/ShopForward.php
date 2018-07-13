@@ -158,7 +158,6 @@ class ShopForward extends Admin
         // 进行提现操作
         $epay = new Epay();
         $res = $epay->toBank($order['odd_number'],$order['account'],$order['account_name'],$order['bank_code'],$order['money'],$order['account_name'].'测试提现');
-        print_r($res);exit;
         // 提现成功后操作
         if($res['return_code']=='SUCCESS' && $res['result_code']=='SUCCESS'){
         	// 更新数据

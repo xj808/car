@@ -64,32 +64,25 @@ class Mate extends Shop
 	public function handle()
 	{
 		$data = input('post.');
-		// 进行数组重构
-		foreach ($data as $k => $v) {
-			foreach ($v as $kv => $vv) {
-				$detail[$kv][$k] = $vv;
-			}
-		}
-		return $detail;exit;
 		// 构建数组
 		$aid = $this->getAgent();
 		$arr = [
 			'apply_sn' => build_only_sn(),
 			'sid' => $this->sid,
 			'aid' => $aid,
-			'detail' => $detail
+			'detail' => $data['detail']
 		];
 		// 检测是否有未处理的订单，防止重复提交
 		$count = Db::table('cs_apply_materiel')->where('sid',$this->sid)->where('audit_status',0)->count();
 		if($count > 0){
+			$this->result('',0,'您有未处理的订单，请确认！');
+		}else{
 			// 进行数据插入
-			if(Db::table('cs_apply_materiel')->insert($arr)){
+			if(Db::table('cs_apply_materiel')->strict(false)->insert($arr)){
 				$this->result('',1,'提交成功');
 			}else{
 				$this->result('',0,'提交失败');
 			}
-		}else{
-			$this->result('',0,'您有未处理的订单，请确认！');
 		}
 	}
 
@@ -137,6 +130,11 @@ class Mate extends Shop
 				->order('id desc')
 				->page($page, $pageSize)
 				->select();
+		foreach ($list as $k => $v) {
+			if(!empty($list[$k]['audit_time'])){
+				$list[$k]['audit_time']=date('Y-m-d H:i:s',$list[$k]['audit_time']);
+			}
+		}
 		// 返回给前端
 		if($count > 0){
 			$this->result(['list'=>$list,'rows'=>$rows],1,'获取成功');
@@ -152,6 +150,7 @@ class Mate extends Shop
 	{
 		$id = input('post.id');
 		$info = Db::table('cs_apply_materiel')->where('id',$id)->field('apply_sn,create_time,audit_time,detail')->find();
+		$info['audit_time']=date();
 		if($info){
 			$this->result($info,0,'获取数据成功');
 		}else{

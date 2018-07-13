@@ -235,7 +235,7 @@ class Center extends Agent{
 
 
 	/**
-	 * 上传营业执照
+	 * 上传系统使用费
 	 * @return 成功或失败
 	 */
 	public function usecost(){
@@ -377,7 +377,7 @@ class Center extends Agent{
 		$lice = Db::table('ca_agent')->where('aid',$this->aid)->value('license');
 		$usecost = Db::table('ca_agent')->where('aid',$this->aid)->value('usecost');
 		if(empty($lice) && empty($usecost)){
-			$this->result('',2,'您还未上传营业执照和系统使用费，请您到个人中心上传。');
+			$this->result('',2,'您还未上传营业执照，请您到个人中心上传。');
 		}
 		$status = Db::table('ca_agent')->where('aid',$this->aid)->value('status');
 		if($status == 2 ){
@@ -389,11 +389,8 @@ class Center extends Agent{
 				$this->result('',0,'您还未设置地区，请您到个人中心->供应地区->设置您的地区。');
 			}
 		}else{
-			$this->result('',3,'您已上传营业执照和系统使用费,请等待总后台审核。');
+			$this->result('',3,'您已上传营业执照,请等待总后台审核。');
 		}
-
-		
-		
 	}
 
 	/**

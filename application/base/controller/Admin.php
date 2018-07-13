@@ -59,12 +59,10 @@ class Admin extends Base
         // 省级id转换为字符串
         $province=$this->areaList($city);
         // 查询所有省市县的数据
-        $list=Db::table('co_china_data')->whereIn('id',$province.','.$city.','.$county)->select();
+        $list=Db::table('co_china_data')->whereIn('id',$province.','.$city.','.$county)->field('name,pid,id')->select();
         if($list){
             // 把数据换成树状结构
             return get_child($list,$list[0]['pid']);
-            
-
         }else{  
             return '暂未设置地区';
         }

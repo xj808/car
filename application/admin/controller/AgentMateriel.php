@@ -50,11 +50,12 @@ class AgentMateriel extends Admin
 	 */
 	public function detail()
 	{
+		// 获取物料申请数据id
 		$id = input('post.id');
 		$list = Db::table('ca_apply_materiel am')
 				->join('ca_agent ca','ca.aid = am.aid')
 				->where('id',$id)
-				->field('am.aid,company,phone,province,city,county')
+				->field('am.aid,company,phone,province,city,county,address')
 				->find();
 		if($list){
 			$this->result($list,1,'获取详情成功');
@@ -189,11 +190,52 @@ class AgentMateriel extends Admin
 		}
 	}
 
-
-
-
-
-
+	public function  downWord()
+    {
+    	$id = input('post.id');
+        // New Word Document
+        $PHPWord = new PhpWord();
+        // New portrait section
+        $section = $PHPWord->createSection();
+         $Data  = Db::table('ca_apply_materiel am')
+        		->join(['ca_agent'=>'ca'],'am.aid = ca.aid')
+ 				->where('id',$id)
+ 				->json(['detail'])
+ 				->field('id,odd_number,company,phone,province,city,county,address,am.create_time,detail')
+ 				->find();
+ 		$Data['caddress'] = $Data['province'].$Data['city'].$Data['county'].$Data['address'];
+            $fontStyle = array('color'=>'000000', 'size'=>15,'align'=>'center');
+            $PHPWord->addFontStyle('myOwnStyle', $fontStyle);
+            $section->addText(iconv('utf-8', 'gb2312','编号：'.$Data['id']), 'myOwnStyle');
+            $section->addTextBreak(1);
+            $section->addText(iconv('utf-8', 'gb2312','订单号'.$Data['odd_number']), 'myOwnStyle');
+            $section->addTextBreak(1);
+            $section->addText(iconv('utf-8', 'gb2312','公司名称：'.$Data['company']), 'myOwnStyle');
+            $section->addTextBreak(1);
+            $section->addText(iconv('utf-8', 'gb2312','手机号：'.$Data['phone']), 'myOwnStyle');
+            $section->addTextBreak(1);
+            $section->addText(iconv('utf-8', 'gb2312','地址：'.$Data['caddress']), 'myOwnStyle');
+            $section->addTextBreak(1);
+            $section->addText(iconv('utf-8', 'gb2312','申请时间：'.$Data['create_time']), 'myOwnStyle');
+            foreach ($Data['detail'] as $k => $v) {
+            	$section->addText(iconv('utf-8', 'gb2312','物料名称：'.$v['materiel']), 'myOwnStyle');
+            	$section->addText(iconv('utf-8', 'gb2312','物料数量：'.$v['num']), 'myOwnStyle');
+            	$section->addText(iconv('utf-8', 'gb2312','备注：'.$v['remarks']), 'myOwnStyle');
+            }
+            // $section->addMemoryImage($img,$imageStyle);
+            $section->addTextBreak(1);
+            $section->addPageBreak();//分页
+        $xlsTitle = iconv('utf-8', 'gb2312','运营商物料申请');//文件名称
+        $fileName = '运营商物料申请'.date('_YmdHis');//or $xlsTitle 文件名称可根据自己情况设定
+        header('pragma:public');
+        header('Content-type:application/vnd.ms-word;charset=utf-8;name="'.$xlsTitle.'.doc"');
+        header("Content-Disposition:inline;filename=$fileName.doc");//attachment新窗口打印inline本窗口打印
+        ob_clean();//关键
+         flush();//关键
+        $objWrite = IOFactory::createWriter($PHPWord, 'Word2007');
+        $objWrite->save('php://output');
+        exit;
+    }
 
 
 	/**
@@ -202,7 +244,7 @@ class AgentMateriel extends Admin
 	 */
 	private function index($page,$status)
 	{
-		$pageSize = 10;
+		$pageSize = 2;
 		$count = Db::table('ca_apply_materiel')->where('audit_status',$status)->count();
 		$rows = ceil($count / $pageSize);
 		$list = Db::table('ca_apply_materiel am')

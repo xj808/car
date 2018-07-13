@@ -4,13 +4,12 @@ use app\base\controller\Base;
 use Firebase\JWT\JWT;
 use think\Db;
 
-
 /**
 * 登录
 */
 class Login extends Base
 {   
-
+    
 	/**
      * 登录
      * @return json
@@ -23,8 +22,8 @@ class Login extends Base
             if($arr){
                 if(compare_password($data['pass'],$arr['pass'])){
                     $token=$this->token($arr['aid'],$data['login']);
-                    $ar=['token'=>$token,'status'=>$arr['status']];
-                    $this->result($ar,1,'登录成功');
+                    $loginSta = $this->loginSta($arr['aid']);
+                    $this->result(['token'=>$token,'aid'=>$arr['aid']],$loginSta['code'],$loginSta['msg']);
                 }else{
                     $this->result('',0,'登录失败');
                 }
@@ -37,6 +36,33 @@ class Login extends Base
     }
     
     
+    /**
+     * 用户登录返回状态
+     * @param  [type] $token [description]
+     * @param  [type] $sid   [description]
+     * @return [type]        [description]
+     */
+    public function loginSta($aid)
+    {
+        // 判断用户有没有上传营业执照
+        $status = Db::table('ca_agent')->where('aid',$aid)->value('status');
+        // 查看运营商是否设置地区
+        $count = Db::table('ca_increase')->where('aid',$aid)->count();
+        if($status == 0){
+            return  ['code'=>1,'msg'=>'您还未支付系统使用费,请扫码支付'];
+        }else if($status == 3){
+            return  ['code'=>1,'msg'=>'您还未上传营业执照，请您到个人中心上传。'];
+        }else if($status == 1 ){
+            $this->result('',2,'您已上传营业执照,请等待总后台审核。');
+        }else if($status == 6){
+            return  ['code'=>3,'msg'=>'您已取消合作,可提现余额'];
+        }else if($count < 0){
+            return  ['code'=>4,'msg'=>'您还未设置地区，请您到个人中心->供应地区->设置您的地区。'];
+        }else{
+            $this->result('',5,'登录成功');
+        }
+    }
+
 
     /**
      * 忘记密码

@@ -19,7 +19,7 @@ class ShopList extends Admin
 		$rows = ceil($count / $pageSize);
 		$list = Db::table('cs_shop')
 				->where('audit_status',2)
-				->field('id,company,phone,leader,card_sale_num,balance,tech_num')
+				->field('id,company,phone,leader,card_sale_num,balance,service_num,tech_num')
 				->page($page,$pageSize)
 				->order('id desc')
 				->select();

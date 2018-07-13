@@ -13,6 +13,7 @@ class ShopCancel extends Agent
 	 */
 	public function agentShop()
 	{
+		$data = input('post.');
 		Db::startTrans();
 		// 修改修车厂取消合作表
 		$time = Db::table('cs_apply_cancel')->where('id',$data['id'])->update(['audit_status'=>1,'audit_time'=>time()]);
@@ -26,7 +27,7 @@ class ShopCancel extends Agent
 					// 增加运营商授信库存
 					if($this->agentMateriel($data['sid'],$this->aid) == true){
 						if($this->clearRation($data['sid']) == true){
-							// 给运营商发送短信
+							// 给用户发送短信
 							$res = $this->oilSms($data['sid'],$data['company'],$data['reason']);
                             if($res == '提交成功'  || $res == '该修车厂没有用户'){
                             	Db::commit();

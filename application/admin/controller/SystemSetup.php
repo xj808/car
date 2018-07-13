@@ -7,20 +7,30 @@ use think\Db;
 */
 class SystemSetup extends Admin
 {
+
+	/**
+	 * 轮播图上传
+	 * @return 轮播图上传后的路径地址
+	 */
+	public function uploadPic()
+	{
+		return upload('image','bby','http://cc.ctbls.com/');
+	}
+
 	public function oilList()
 	{
 		$page = input('post.page') ? :1;
-		$pageSize = 2;
+		$pageSize = 4;
 		// 查询油品信息
 		$count = Db::table('co_bang_cate_about')->count();
-		$row = ceil($count / $pageSize);
+		$rows = ceil($count / $pageSize);
 		$list = Db::table('co_bang_cate_about')
 				->field('id,name,cover')
 				->order('id desc')
 				->page($page,$pageSize)
 				->select();
 		if($count > 0){
-			$this->result(['list'=>$list,'row'=>$row],1,'获取列表成功');
+			$this->result(['list'=>$list,'rows'=>$rows],1,'获取列表成功');
 		}else{
 			$this->result('',0,'暂无数据');
 		}
@@ -34,7 +44,7 @@ class SystemSetup extends Admin
 	 */
 	public function oilName()
 	{
-		$data = Db::table('co_bang_cate')->field('id,name')->where([['id','<>',1],['id','<>',6]])->select();
+		$data = Db::table('co_bang_cate')->field('id,name')->where([['id','<>',1],['id','<>','6']])->select();
 		if($data){
 			$this->result($data,'1','获取数据成功');
 		}else{
@@ -51,7 +61,7 @@ class SystemSetup extends Admin
 		$data = input('post.');
 		$validate = validate('SetOil');
 		if($validate->check($data)){
-			$res = Db::table('co_bang_cate_about')->insert($data);
+			$res = Db::table('co_bang_cate_about')->strict(false)->insert($data);
 			if($res){
 				$this->result('',1,'设置成功');
 			}else{
@@ -71,7 +81,7 @@ class SystemSetup extends Admin
 	{
 		$id = input('post.id');
 
-		$list = Db::table('co_bang_cate_about')->where('id',$id)->field('id,name,cover,price,about')->find();
+		$list = Db::table('co_bang_cate_about')->where('id',$id)->find();
 		if($list){
 			$this->result($list,1,'获取数据成功');
 		}else{
@@ -86,11 +96,11 @@ class SystemSetup extends Admin
 	 */
 	public function setOper()
 	{
-		//自增id、油名称、油图片、油简介、油价钱
+		//自增id、油id、油图片、油简介、油价钱
 		$data = input('post.');
-		$validate = validate('SetOil');
+		$validate = validate('SetOper');
 		if($validate->check($data)){
-			$res = Db::table('co_bang_cate_about')->where('id',$data['id'])->save($data);
+			$res = Db::table('co_bang_cate_about')->strict(false)->where('id',$data['id'])->update($data);
 			if($res !== false){
 				$this->result('',1,'修改成功');
 			}else{
@@ -124,7 +134,7 @@ class SystemSetup extends Admin
 	public function detail()
 	{
 		$id = input('post.id');
-		$detail = Db::table('co_bang_cate_about')->where('id',$id)->field('name,cover,price,about')->find();
+		$detail = Db::table('co_bang_cate_about')->where('id',$id)->find();
 		if($detail){
 			$this->result($detail,1,'获取详情成功');
 		}else{
